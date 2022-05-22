@@ -31,4 +31,4 @@ yarn-error.log*
 # vercel
 .vercel
 
-/JSONDATA
+/pages/api/JSONDATA
