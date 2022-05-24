@@ -3,10 +3,11 @@ import { useRouter } from "next/router";
 
 export default function Home() {
   const preDefinedHeaders = Object.keys({
-    "Plac.": "ONLY_NAME", "Start#": "ONLY_NAME", "Avdelning": "ONLY_NAME", "Scoutkår": "ONLY_NAME", "Distrikt": "ONLY_NAME", "Resultat": "RESULT", "Summa": "RESULT"
+    "Plac.": "ONLY_NAME", "Start#": "ONLY_NAME", "Avdelning": "ONLY_NAME", "Scoutkår": "ONLY_NAME", "Distrikt": "ONLY_NAME", "Patrull": "ONLY_NAME", "Resultat": "RESULT", "Summa": "RESULT"
   })
   const years = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019, 2021, 2022]
   const [myr, setMyr] = useState(false);
+  const [sortOn, setSortOn] = useState({col:'Plac.',dirk:'DESC'});
   const { query } = useRouter();
   const router = useRouter()
   const [year, setYear] = useState(query.year ? query.year : 2022);
@@ -169,16 +170,26 @@ export default function Home() {
             {headers.map((header) => {
               return (<th onClick={(e) => {
                 setMyr([...myr.sort((contestantA, contestantB) => {
-                  if (Number(contestantA[header]) >= Number(contestantB[header])) {
+                  let sortA = !isNaN(Number(contestantA[header])) ? Number(contestantA[header]) : contestantA[header]
+                  let sortB = !isNaN(Number(contestantB[header])) ? Number(contestantB[header]) : contestantB[header]
+                  
+                  if (header === sortOn.col && sortOn.dirk === 'DESC' ||  header !== sortOn.col ){
+                    setSortOn({col:header,dirk: 'ASC' });
+                  } else {
+                    sortB = !isNaN(Number(contestantA[header])) ? Number(contestantA[header]) : contestantA[header]
+                    sortA = !isNaN(Number(contestantB[header])) ? Number(contestantB[header]) : contestantB[header]
+                    setSortOn({col:header,dirk: 'DESC' });
+                  }
+                  if (sortA >= sortB) {
                     return -1
-                  } else if (Number(contestantA[header]) <= Number(contestantB[header])) {
+                  } else if (sortA <= sortB) {
                     return 1
                   }
                   else 0
                 })])
-              }} style={pointHeaders.indexOf(header) !== -1 ? { transform: "rotate(-180deg)", writingMode: 'vertical-rl', textOrientation: 'mixed', textAlign: "start", padding: '5px 0 0 0' } : {
+              }} style={ pointHeaders.indexOf(header) !== -1 ? { transform: "rotate(-180deg)", writingMode: 'vertical-rl', textOrientation: 'mixed', textAlign: "start", padding: '5px 0 0 0' } : {
                 verticalAlign: 'bottom'
-              }}>{header}</th>)
+              }}>{header}{header === sortOn.col ? sortOn.dirk === 'ASC' ? ' v' : ' ^' : ''}</th>)
             })
             }
           </tr>
