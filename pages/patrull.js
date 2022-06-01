@@ -3,9 +3,9 @@ import { useRouter } from "next/router";
 
 export default function Home() {
   const preDefinedHeaders = Object.keys({
-    "Plac.": "ONLY_NAME", "Start#": "ONLY_NAME", "Avdelning": "ONLY_NAME", "Scoutkår": "ONLY_NAME", "Distrikt": "ONLY_NAME", "Patrull": "ONLY_NAME", "Resultat": "RESULT", "Summa": "RESULT"
+    "Plac.": "ONLY_NAME","Patruller": "ONLY_NAME","Start#": "ONLY_NAME", "Avdelning": "ONLY_NAME", "Scoutkår": "ONLY_NAME", "Distrikt": "ONLY_NAME", "Patrull": "ONLY_NAME", "Resultat": "RESULT", "Summa": "RESULT"
   })
-  const years = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019, 2021, 2022]
+  const years = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2009, 2010, 2011, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022]
   const [myr, setMyr] = useState(false);
   const [sortOn, setSortOn] = useState({col:'Plac.',dirk:'DESC'});
   const { query } = useRouter();
@@ -16,7 +16,52 @@ export default function Home() {
       if (year){
         fetch('/api/alghornet?year=' + year)
           .then(response => response.json())
-          .then(data => setMyr(data));
+          .then(data => {
+            let bigestAvd = 0
+            const avds = data.reduce((prevContestants, contestant) => {
+              // console.warn(contestant['Scoutkår']+contestant['Avdelning'])
+              if (!prevContestants || !prevContestants[contestant['Scoutkår']+contestant['Avdelning']]){
+                
+                return {
+                  ...prevContestants, [contestant['Scoutkår']+contestant['Avdelning']] : [contestant]
+                }
+              }
+              const newData = {...prevContestants}
+              newData[contestant['Scoutkår']+contestant['Avdelning']].push(contestant)
+              if (bigestAvd < newData[contestant['Scoutkår']+contestant['Avdelning']].length) {
+                bigestAvd = newData[contestant['Scoutkår']+contestant['Avdelning']].length
+              }
+              return newData
+            }
+            , {})
+        
+            const alg = Object.keys(avds).map((avdkey) => {
+                return Object.keys(avds[avdkey]).reduce((prevPatrulls, patrull) => {
+                  if (Object.keys(prevPatrulls).length > 0) {
+                    const newData = {...prevPatrulls}
+                    Object.keys(avds[avdkey][patrull]).forEach((key)=>{
+                      if (preDefinedHeaders.indexOf(key) === -1){
+                        newData[key] = Number(newData[key]) + Number(avds[avdkey][patrull][key])
+                      }
+                    })
+                    // console.log(newData['patrulls'])
+                    newData['Patruller'] = newData['Patruller'] + 1;
+                    return newData
+                  }
+                  return {...avds[avdkey][patrull], Patruller: 1}
+                  
+                }, {})
+            }).map((contestant)=>{
+              return Object.keys(contestant).reduce((prevCol, key) =>{
+                if (preDefinedHeaders.indexOf(key) === -1){
+                  return {...prevCol,[key]:contestant[key] / avds[[contestant['Scoutkår']+contestant['Avdelning']]].length* bigestAvd }
+                } 
+                return {...prevCol,[key]:contestant[key]}
+              },{})
+            })
+            
+            setMyr(alg)
+          });
       }
     }, [year]
   );
@@ -75,6 +120,7 @@ export default function Home() {
       })
     })
     const total = sums.reduce((prevSum, sum, i) => sums[i][Object.keys(sum)[0]] + prevSum, 0)
+
     return (
       <>
         <div>{years.map((buttonYear) => (
@@ -89,7 +135,7 @@ export default function Home() {
             cursor:'pointer'
           }} onClick={
             (e) => {
-              router.push('/?year=' + buttonYear, undefined, { shallow: true })
+              router.push('/patrull?year=' + buttonYear, undefined, { shallow: true })
               setYear(buttonYear)
             }
           }>{buttonYear}</button>

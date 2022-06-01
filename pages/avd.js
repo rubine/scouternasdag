@@ -5,8 +5,8 @@ export default function Home() {
   const preDefinedHeaders = Object.keys({
     "Plac.": "ONLY_NAME", "Start#": "ONLY_NAME", "Avdelning": "ONLY_NAME", "Scoutkår": "ONLY_NAME", "Distrikt": "ONLY_NAME", "Patrull": "ONLY_NAME", "Resultat": "RESULT", "Summa": "RESULT"
   })
-  const years = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019, 2021, 2022]
-  const [myr, setMyr] = useState(false);
+  const years = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2009, 2010, 2011, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022]
+   const [myr, setMyr] = useState(false);
   const [sortOn, setSortOn] = useState({col:'Plac.',dirk:'DESC'});
   const { query } = useRouter();
   const router = useRouter()
@@ -16,7 +16,41 @@ export default function Home() {
       if (year){
         fetch('/api/alghornet?year=' + year)
           .then(response => response.json())
-          .then(data => setMyr(data));
+          .then(data => {
+            let bigestAvd = 0
+            const avds = data.reduce((prevContestants, contestant) => {
+              // console.warn(contestant['Scoutkår']+contestant['Avdelning'])
+              if (!prevContestants || !prevContestants[contestant['Scoutkår']+contestant['Avdelning']]){
+                let patrullPoints = 0;
+                Object.keys(contestant).forEach((key)=>{
+                  if (preDefinedHeaders.indexOf(key) === -1){
+                    patrullPoints= Number(patrullPoints) + Number(contestant[key])
+                  }
+                })
+                return {
+                  ...prevContestants, [contestant['Scoutkår']+contestant['Avdelning']] : [patrullPoints]
+                }
+              }
+              const newData = {...prevContestants}
+
+              let patrullPoints = 0;
+              Object.keys(contestant).forEach((key)=>{
+                if (preDefinedHeaders.indexOf(key) === -1){
+                  patrullPoints= Number(patrullPoints) + Number(contestant[key])
+                }
+              })
+              newData[contestant['Scoutkår']+contestant['Avdelning']] = [...newData[contestant['Scoutkår']+contestant['Avdelning']], patrullPoints].sort((a, b)=>(b-a)).slice(0,3)
+              
+
+              if (bigestAvd < newData[contestant['Scoutkår']+contestant['Avdelning']].length) {
+                bigestAvd = newData[contestant['Scoutkår']+contestant['Avdelning']].length
+              }
+              return newData
+            }
+            , {})
+            
+            setMyr(avds)
+          });
       }
     }, [year]
   );
@@ -24,60 +58,14 @@ export default function Home() {
     () => {
       setYear(query.year)
     }, [query]
-  );
-  if (myr.length > 0) {
-    const myrstigen = myr.map((contestant) => {
-      return {
-        ...contestant, 'Summa': Object.keys(contestant).reduce((previousValue, currentValue) => {
-          if (preDefinedHeaders.indexOf(currentValue) >= 0) {
-            return previousValue
-          }
-          return previousValue + Number(contestant[currentValue])
-        }, 0)
-      }
-    })
-    let headers = Object.keys(myrstigen[0]).sort((headerA, headerB) => {
-      const pointsA = preDefinedHeaders.indexOf(headerA) >= 0 ? preDefinedHeaders.indexOf(headerA) : Object.keys(myrstigen[0]).length + 1
-      const pointsB = preDefinedHeaders.indexOf(headerB) >= 0 ? preDefinedHeaders.indexOf(headerB) : Object.keys(myrstigen[0]).length + 1
-      if (pointsA >= pointsB) {
-        return 1
-      } else if (pointsA <= pointsB) {
-        return -1
-      }
-      else 0
-    })
-    const pointHeaders = Object.keys(myrstigen[0]).filter((header) => {
-      return preDefinedHeaders.indexOf(header) === -1
-    })
-    let sums = pointHeaders.map((header) => ({
-      [header]: 0
-    }))
-    myrstigen.forEach((contestant) => {
-      sums.forEach((sum, i) => {
-        sums[i][Object.keys(sum)[0]] = sums[i][Object.keys(sum)[0]] + Number(contestant[Object.keys(sum)[0]])
-      })
-    })
-    const firstAndSecond = pointHeaders.reduce((prevHeader, header) => {
-      return {
-        ...prevHeader, [header]: { firstPoint: 0, secondPoint: 0 }
-      }
-    }, {})
-    myrstigen.forEach((contestant) => {
-      Object.keys(contestant).forEach((col) => {
-        if (firstAndSecond[col]) {
-          if (firstAndSecond[col].firstPoint < contestant[col]) {
-            firstAndSecond[col].secondPoint = Number(firstAndSecond[col].firstPoint)
-            firstAndSecond[col].firstPoint = Number(contestant[col])
-          } else if (firstAndSecond[col].secondPoint < contestant[col]) {
-            firstAndSecond[col].secondPoint = Number(contestant[col])
-          }
-        }
-      })
-    })
-    const total = sums.reduce((prevSum, sum, i) => sums[i][Object.keys(sum)[0]] + prevSum, 0)
+    );
+    if (Object.keys(myr).length > 0) {
+      const myrstigen = Object.keys(myr).map((key)=>{
+        return {name: key, patrulls:myr[key], summa: myr[key].reduce((prev, item)=>(prev+item))}
+      }).sort((a, b)=>(b.summa-a.summa))
     return (
       <>
-        <div>{years.map((buttonYear) => (
+       <div>{years.map((buttonYear) => (
           <button style={{
             background: Number(buttonYear) === Number(year) ? "#ffd8b8" : "#f8ab67",
             borderRadius: "3px",
@@ -89,13 +77,28 @@ export default function Home() {
             cursor:'pointer'
           }} onClick={
             (e) => {
-              router.push('/?year=' + buttonYear, undefined, { shallow: true })
+              router.push('avd/?year=' + buttonYear, undefined, { shallow: true })
               setYear(buttonYear)
             }
           }>{buttonYear}</button>
         ))}</div>
-        <h1>Resultat myrstigen {year}</h1>
+        <h1>Resultat avdelning (Kalkulerade poäng) {year}</h1>
         <table style={{ marginTop: "24px" }}>
+          {
+            myrstigen.map((contestant) => {
+              return (
+                <tr>
+                  <th>{contestant.name}</th>
+                  <th>{contestant.summa}</th>
+                  {contestant.patrulls.map((value) => {
+                    return (<td>{value}</td>)
+                  })
+                  }
+                </tr>
+              )
+            })}
+        </table>
+         {/* <table style={{ marginTop: "24px" }}>
           <tr>
             {headers.map((header, i) => {
               const sum = sums.find((sum) => !!sum[header])
@@ -204,7 +207,7 @@ export default function Home() {
                 </tr>
               )
             })}
-        </table>
+        </table> */}
       </>
     )
   } return null
