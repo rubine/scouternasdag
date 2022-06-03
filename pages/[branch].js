@@ -11,18 +11,27 @@ export default function Home() {
   const { query } = useRouter();
   const router = useRouter()
   const [year, setYear] = useState(query.year ? query.year : 2022);
+  const [branch, setBranch] = useState(query.branch);
+  const branches = ['myrstigen','alghornet']
+
   useEffect(
     () => {
-      if (year){
-        fetch('/api/alghornet?year=' + year)
+      if (branch && year){
+        fetch('/api/'+branch+'?year=' + year)
           .then(response => response.json())
           .then(data => setMyr(data));
       }
-    }, [year]
+    }, [branch, year]
   );
   useEffect(
     () => {
-      setYear(query.year)
+      console.log(query)
+      if (query.year){
+        setYear(query.year)
+      }
+      if (query.branch){
+        setBranch(query.branch)
+      }
     }, [query]
   );
   if (myr.length > 0) {
@@ -77,23 +86,40 @@ export default function Home() {
     const total = sums.reduce((prevSum, sum, i) => sums[i][Object.keys(sum)[0]] + prevSum, 0)
     return (
       <>
-        <div>{years.map((buttonYear) => (
-          <button style={{
-            background: Number(buttonYear) === Number(year) ? "#ffd8b8" : "#f8ab67",
-            borderRadius: "3px",
-            padding: "0px 6px",
-            border: Number(buttonYear) === Number(year) ?  'none' : "1px solid #361703",
-            margin: "3px",
-            height: "32px",
-            textDecoration: "none",
-            cursor:'pointer'
-          }} onClick={
-            (e) => {
-              router.push('/?year=' + buttonYear, undefined, { shallow: true })
-              setYear(buttonYear)
-            }
-          }>{buttonYear}</button>
-        ))}</div>
+      <div>{years.map((buttonYear) => (
+        <button style={{
+          background: Number(buttonYear) === Number(year) ? "#ffd8b8" : "#f8ab67",
+          borderRadius: "3px",
+          padding: "0px 6px",
+          border: Number(buttonYear) === Number(year) ?  'none' : "1px solid #361703",
+          margin: "3px",
+          height: "32px",
+          textDecoration: "none",
+          cursor:'pointer'
+        }} onClick={
+          (e) => {
+            router.push('/'+branch+'?year=' + buttonYear, undefined, { shallow: true })
+            setYear(buttonYear)
+          }
+        }>{buttonYear}</button>
+      ))}</div>
+      <div>{branches.map((buttonBranch) => (
+        <button style={{
+          background: buttonBranch === branch ? "#ffd8b8" : "#f8ab67",
+          borderRadius: "3px",
+          padding: "0px 6px",
+          border: buttonBranch === branch ?  'none' : "1px solid #361703",
+          margin: "3px",
+          height: "32px",
+          textDecoration: "none",
+          cursor:'pointer'
+        }} onClick={
+          (e) => {
+            router.push('/'+buttonBranch+'?year=' + year, undefined, { shallow: true })
+            setYear(buttonBranch)
+          }
+        }>{buttonBranch}</button>
+      ))}</div>
         <h1>Resultat myrstigen {year}</h1>
         <table style={{ marginTop: "24px" }}>
           <tr>
