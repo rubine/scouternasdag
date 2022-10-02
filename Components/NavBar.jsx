@@ -10,7 +10,7 @@ export default function NavBar({ funk ,branch, branches, maxMinYears, year, year
                     activ={funk}
                     value="Funktionärpoäng"
                     onClick={() => {
-                        router.push('/funk', undefined, { shallow: true })
+                        router.push('/scouttavlingar/funk', undefined, { shallow: true })
                     }}
                 />
             <hr />
