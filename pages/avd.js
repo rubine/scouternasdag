@@ -14,13 +14,13 @@ export default function Home() {
   useEffect(
     () => {
       if (year){
-        fetch('/api/alghornet?year=' + year)
+        fetch('/api/alghornet?year=' + year+ '&type=pat')
           .then(response => response.json())
           .then(data => {
             let bigestAvd = 0
-            const avds = data.reduce((prevContestants, contestant) => {
-              // console.warn(contestant['Scoutkår']+contestant['Avdelning'])
-              if (!prevContestants || !prevContestants[contestant['Scoutkår']+contestant['Avdelning']]){
+            const avds = data.contestants.reduce((prevContestants, contestant) => {
+              const uid = contestant['Scoutkår']+ ' ' + contestant['Avdelning']
+              if (!prevContestants || !prevContestants[uid]){
                 let patrullPoints = 0;
                 Object.keys(contestant).forEach((key)=>{
                   if (preDefinedHeaders.indexOf(key) === -1){
@@ -28,7 +28,7 @@ export default function Home() {
                   }
                 })
                 return {
-                  ...prevContestants, [contestant['Scoutkår']+contestant['Avdelning']] : [patrullPoints]
+                  ...prevContestants, [uid] : [patrullPoints]
                 }
               }
               const newData = {...prevContestants}
@@ -39,16 +39,23 @@ export default function Home() {
                   patrullPoints= Number(patrullPoints) + Number(contestant[key])
                 }
               })
-              newData[contestant['Scoutkår']+contestant['Avdelning']] = [...newData[contestant['Scoutkår']+contestant['Avdelning']], patrullPoints].sort((a, b)=>(b-a)).slice(0,3)
+              newData[uid] = [...newData[uid], patrullPoints].sort((a, b)=>(b-a)).slice(0,3)
               
 
-              if (bigestAvd < newData[contestant['Scoutkår']+contestant['Avdelning']].length) {
-                bigestAvd = newData[contestant['Scoutkår']+contestant['Avdelning']].length
+              if (bigestAvd < newData[uid].length) {
+                bigestAvd = newData[uid].length
               }
               return newData
             }
             , {})
             
+      fetch('/api/alghornet?year=' + year+ '&type=avd')
+      .then(response => response.json())
+      .then((data)=>{
+        data.contestants.map((contestant)=>{
+          console.log(avds[contestant['Scoutkår'] + ' ' + contestant.Avdelning])
+        })
+      })
             setMyr(avds)
           });
       }
@@ -56,7 +63,9 @@ export default function Home() {
   );
   useEffect(
     () => {
-      setYear(query.year)
+      if (query.year){
+        setYear(query.year)
+      }
     }, [query]
     );
     if (Object.keys(myr).length > 0) {
@@ -66,7 +75,7 @@ export default function Home() {
     return (
       <>
        <div>{years.map((buttonYear) => (
-          <button style={{
+          <button key={buttonYear} style={{
             background: Number(buttonYear) === Number(year) ? "#ffd8b8" : "#f8ab67",
             borderRadius: "3px",
             padding: "0px 6px",
@@ -85,129 +94,20 @@ export default function Home() {
         <h1>Resultat avdelning (Kalkulerade poäng) {year}</h1>
         <table style={{ marginTop: "24px" }}>
           {
-            myrstigen.map((contestant) => {
+            myrstigen.map((contestant, index) => {
               return (
-                <tr>
+                <tr key={contestant + index}>
+                <th>{index + 1}</th>
                   <th>{contestant.name}</th>
                   <th>{contestant.summa}</th>
                   {contestant.patrulls.map((value) => {
-                    return (<td>{value}</td>)
+                    return (<td key={value + index}>{value}</td>)
                   })
                   }
                 </tr>
               )
             })}
         </table>
-         {/* <table style={{ marginTop: "24px" }}>
-          <tr>
-            {headers.map((header, i) => {
-              const sum = sums.find((sum) => !!sum[header])
-              return (<th>{sum ? sum[header] : ''}</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Summa av poäng'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const sum = sums.find((sum) => !!sum[header])
-              return (<th>{ sum ? Math.round(Number(sum[header]) / myrstigen.length) : ''}</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Medelpoäng'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const sum = sums.find((sum) => !!sum[header])
-              return (<th>{ sum ? Math.round(Number(sum[header]) / total * 100) + '%' : ''}</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Andlar av toltal'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const FAS = firstAndSecond[header]
-              return (<th>{FAS ? Number(firstAndSecond[header].firstPoint) - Number(firstAndSecond[header].secondPoint) : ''}</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Diff. mellan no1&2'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const FAS = firstAndSecond[header]
-              const sum = sums.find((sum) => !!sum[header])
-              const diffControl = FAS ? Math.round((Number(firstAndSecond[header].firstPoint) -( Math.round(Number(sum[header]) / myrstigen.length))) / Number(sum ? sum[header] : 0) * 1000) : 0
-              return (<th style={{
-                background: FAS ?  diffControl > 50 ? '#f00' : diffControl >= 20 ? '#a74300' : diffControl > 15 ? '#f8ab67' : '#ffd8b8' : '',
-                color: diffControl < 20? '#000000' :'#ffffff' 
-             }}>{FAS ? diffControl + '‰' : '' }</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Andlar 1´an mot medel'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const FAS = firstAndSecond[header]
-              const sum = sums.find((sum) => !!sum[header])
-              const diffControl = FAS ? Math.round((Number(firstAndSecond[header].firstPoint) - Number(firstAndSecond[header].secondPoint)) / Number(sum ? sum[header] : 0) * 1000) : 0
-              return (<th style={{
-                background: FAS ?  diffControl > 15 ? '#a74300' : diffControl > 10 ? '#f8ab67' : '#ffd8b8' : '',
-                color: diffControl < 15? '#000000' :'#ffffff' 
-             }}>{FAS ? diffControl + '‰' : '' }</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Andlar diff. mellan no1&2 kontroll summa'}</th>
-          </tr>
-          <tr >
-            {headers.map((header, i) => {
-              const FAS = firstAndSecond[header]
-              const diffTotal = FAS ? Math.round((Number(firstAndSecond[header].firstPoint) - Number(firstAndSecond[header].secondPoint)) / total * 10000) :0
-              return (<th style={{
-                background: FAS ? diffTotal > 12 ? '#a74300' : diffTotal > 7 ? '#f8ab67' : '#ffd8b8' : '',
-                color: diffTotal < 12 ? '#000000' :'#ffffff' 
-             }}>{ FAS ? diffTotal + '‱':  ''}</th>)
-            })
-            }
-          <th style={{textAlign:'left'}}>{'<-Andlar diff. mellan no1&2 total'}</th>
-          </tr>
-          <tr style={{ cursor: 'pointer' }}>
-            {headers.map((header) => {
-              return (<th onClick={(e) => {
-                setMyr([...myr.sort((contestantA, contestantB) => {
-                  let sortA = !isNaN(Number(contestantA[header])) ? Number(contestantA[header]) : contestantA[header]
-                  let sortB = !isNaN(Number(contestantB[header])) ? Number(contestantB[header]) : contestantB[header]
-                  
-                  if (header === sortOn.col && sortOn.dirk === 'DESC' ||  header !== sortOn.col ){
-                    setSortOn({col:header,dirk: 'ASC' });
-                  } else {
-                    sortB = !isNaN(Number(contestantA[header])) ? Number(contestantA[header]) : contestantA[header]
-                    sortA = !isNaN(Number(contestantB[header])) ? Number(contestantB[header]) : contestantB[header]
-                    setSortOn({col:header,dirk: 'DESC' });
-                  }
-                  if (sortA >= sortB) {
-                    return -1
-                  } else if (sortA <= sortB) {
-                    return 1
-                  }
-                  else 0
-                })])
-              }} style={ pointHeaders.indexOf(header) !== -1 ? { transform: "rotate(-180deg)", writingMode: 'vertical-rl', textOrientation: 'mixed', textAlign: "start", padding: '5px 0 0 0' } : {
-                verticalAlign: 'bottom'
-              }}>{header}{header === sortOn.col ? sortOn.dirk === 'ASC' ? ' v' : ' ^' : ''}</th>)
-            })
-            }
-          </tr>
-          {
-            myrstigen.map((contestant) => {
-              return (
-                <tr>
-                  {Object.keys(contestant).map((key, i) => {
-                    return (<td>{contestant[headers[i]]}</td>)
-                  })
-                  }
-                </tr>
-              )
-            })}
-        </table> */}
       </>
     )
   } return null

@@ -1,237 +1,172 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/router";
+import TableBody from "../Components/TableBody"
+import TableHeaders from "../Components/TableHeaders"
+import SumOfPoints from "../Components/SumOfPoints"
+import AverageScore from "../Components/AverageScore"
+import AverageScoreOfTotal from "../Components/AverageScoreOfTotal"
+import DiffFirstAndSecond from "../Components/DiffFirstAndSecond"
+import AverageAgainstTheWinner from "../Components/AverageAgainstTheWinner"
+import DiffFirstAndSecondAgainstControl from "../Components/DiffFirstAndSecondAgainstControl"
+import DiffFirstAndSecondAgainstTotal from "../Components/DiffFirstAndSecondAgainstTotal"
+import Header from "../Components/Header"
+
+import corps from '../UI/corps.js'
+import sum from "../UI/sum"
+import calcAvd from "../UI/calcAvdControll"
+import findFirstAndSecond from "../UI/firstAndSecond"
+import addSums from '../UI/addSums';
+import findHeaders from "../UI/findHeaders"
 
 export default function Home() {
   const preDefinedHeaders = Object.keys({
-    "Plac.": "ONLY_NAME", "Start#": "ONLY_NAME", "Avdelning": "ONLY_NAME", "Scoutkår": "ONLY_NAME", "Distrikt": "ONLY_NAME", "Patrull": "ONLY_NAME", "Resultat": "RESULT", "Summa": "RESULT"
+    "Plac.": "ONLY_NAME", "Patruller": "ONLY_NAME", "Start#": "ONLY_NAME","Distrikt": "ONLY_NAME", "Scoutkår": "ONLY_NAME","Avdelning": "ONLY_NAME","Lag/Patrull": "ONLY_NAME", "Patrull": "ONLY_NAME", "Resultat": "RESULT", "Summa": "RESULT"
   })
-  const years = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2019, 2021, 2022]
-  const [myr, setMyr] = useState(false);
-  const [sortOn, setSortOn] = useState({col:'Plac.',dirk:'DESC'});
+  const idToName = {
+    myrstigen: 'Myrstigen',
+    alghornet: 'Älghornet',
+    pat: 'Patrull',
+    kalkpat: 'Kalkulerad avdelning',
+    avd: 'Avdelning',
+    silv: 'Silverugglan',
+    bjorn: 'Björnklon'
+  }
+  const [info, setInfo] = useState('Ingen information')
+  const [years, setYears] = useState([]);
+  const [maxMinYears, setMaxMinYears] = useState([]);
+  const [contestantsData, setContestantsData] = useState(false);
+  const [sortOn, setSortOn] = useState({ col: 'Plac.', dirk: 'DESC' });
   const { query } = useRouter();
   const router = useRouter()
   const [year, setYear] = useState(query.year ? query.year : 2022);
+  const [type, setType] = useState(query.type ? query.type : 'avd');
   const [branch, setBranch] = useState(query.branch);
-  const branches = ['myrstigen','alghornet']
+  const branches = ['myrstigen', 'bjorn', 'alghornet', 'silv']
+  const types = ['avd', 'pat', 'kalkpat']
 
   useEffect(
     () => {
-      if (branch && year){
-        fetch('/api/'+branch+'?year=' + year)
-          .then(response => response.json())
-          .then(data => setMyr(data));
+      if (branch === 'myrstigen') {
+        setType('avd')
       }
-    }, [branch, year]
+      if (branch === 'silv') {
+        setType('pat')
+      }
+    }, [branch]
   );
   useEffect(
     () => {
-      console.log(query)
-      if (query.year){
+      if (branch && type) {
+        fetch('/api/years?branch=' + branch + '&type=' + type)
+          .then(response => response.json())
+          .then(data => {
+            setYears(data.years)
+            setMaxMinYears(Array.apply(null, Array(data.maxMinYears.max - data.maxMinYears.min))
+              .reduce((years) => ([...years, years[years.length - 1] + 1]), [data.maxMinYears.min]))
+          })
+        setSortOn({ col: 'Plac.', dirk: 'DESC' })
+      }
+    }, [branch, type]
+  );
+  useEffect(
+    () => {
+      if (branch && type) {
+        fetch('/api/' + branch + '?year=' + year + '&type=' + type)
+          .then(response => response.json())
+          .then(data => {
+            if (data.contestants){
+              const corpsList = Object.keys(corps).reduce((listOfCorps, oneCorps) => {
+                return { ...listOfCorps, ...corps[oneCorps].names.reduce((names, name) => ({ ...names, [name]: oneCorps }), {}) }
+              }, {})
+              const contestants = data.contestants.map((contestant) => {
+                return { ...contestant, Scoutkår: corps[corpsList[contestant.Scoutkår]] ? corps[corpsList[contestant.Scoutkår]].name : '' }
+              })
+  
+              if (data.contestants) {
+                if (type === 'kalkpat') {
+                  setContestantsData(sum(calcAvd(contestants, preDefinedHeaders), preDefinedHeaders))
+                } else {
+                  setContestantsData(sum(contestants, preDefinedHeaders))
+                }
+              }
+              setInfo(data.infoAboutScore)
+            } else {
+              setContestantsData([])
+              setInfo('Jag har ingen lagt in eller hittat data än för dennna taväling detta år.')
+            }
+          }).catch(()=>{
+            setContestantsData([])
+          })
+        setSortOn({ col: 'Plac.', dirk: 'DESC' })
+      }
+    }, [branch, year, type]
+  );
+  useEffect(
+    () => {
+      if (query.year) {
         setYear(query.year)
       }
-      if (query.branch){
+      if (query.branch) {
         setBranch(query.branch)
+      }
+      if (query.type) {
+        setType(query.type)
       }
     }, [query]
   );
-  if (myr.length > 0) {
-    const myrstigen = myr.map((contestant) => {
-      return {
-        ...contestant, 'Summa': Object.keys(contestant).reduce((previousValue, currentValue) => {
-          if (preDefinedHeaders.indexOf(currentValue) >= 0) {
-            return previousValue
-          }
-          return previousValue + Number(contestant[currentValue])
-        }, 0)
-      }
-    })
-    let headers = Object.keys(myrstigen[0]).sort((headerA, headerB) => {
-      const pointsA = preDefinedHeaders.indexOf(headerA) >= 0 ? preDefinedHeaders.indexOf(headerA) : Object.keys(myrstigen[0]).length + 1
-      const pointsB = preDefinedHeaders.indexOf(headerB) >= 0 ? preDefinedHeaders.indexOf(headerB) : Object.keys(myrstigen[0]).length + 1
-      if (pointsA >= pointsB) {
-        return 1
-      } else if (pointsA <= pointsB) {
-        return -1
-      }
-      else 0
-    })
-    const pointHeaders = Object.keys(myrstigen[0]).filter((header) => {
-      return preDefinedHeaders.indexOf(header) === -1
-    })
-    let sums = pointHeaders.map((header) => ({
-      [header]: 0
-    }))
-    myrstigen.forEach((contestant) => {
-      sums.forEach((sum, i) => {
-        sums[i][Object.keys(sum)[0]] = sums[i][Object.keys(sum)[0]] + Number(contestant[Object.keys(sum)[0]])
-      })
-    })
-    const firstAndSecond = pointHeaders.reduce((prevHeader, header) => {
-      return {
-        ...prevHeader, [header]: { firstPoint: 0, secondPoint: 0 }
-      }
-    }, {})
-    myrstigen.forEach((contestant) => {
-      Object.keys(contestant).forEach((col) => {
-        if (firstAndSecond[col]) {
-          if (firstAndSecond[col].firstPoint < contestant[col]) {
-            firstAndSecond[col].secondPoint = Number(firstAndSecond[col].firstPoint)
-            firstAndSecond[col].firstPoint = Number(contestant[col])
-          } else if (firstAndSecond[col].secondPoint < contestant[col]) {
-            firstAndSecond[col].secondPoint = Number(contestant[col])
-          }
+
+  useEffect(
+    () => {
+      setContestantsData([...contestantsData.sort((contestantA, contestantB) => {
+        let sortA = !isNaN(Number(contestantA[sortOn.col])) ? Number(contestantA[sortOn.col]) : contestantA[sortOn.col]
+        let sortB = !isNaN(Number(contestantB[sortOn.col])) ? Number(contestantB[sortOn.col]) : contestantB[sortOn.col]
+    
+        // if (!(header === sortOn.col && sortOn.dirk === 'DESC' || header !== sortOn.col)){
+        //     sortB = !isNaN(Number(contestantA[header])) ? Number(contestantA[header]) : contestantA[header]
+        //     sortA = !isNaN(Number(contestantB[header])) ? Number(contestantB[header]) : contestantB[header]
+        // }
+        if (sortA >= sortB) {
+            return -1
+        } else if (sortA <= sortB) {
+            return 1
         }
-      })
-    })
+        else 0
+    })])
+    }, [sortOn]
+  );
+
+  if (contestantsData && contestantsData.length > 0) {
+    const contestants = [...contestantsData]
+    const headers = findHeaders(contestants, preDefinedHeaders)
+    const pointHeaders = Object.keys(contestants[0]).filter((header) => preDefinedHeaders.indexOf(header) === -1)
+    const sums = addSums(contestants, pointHeaders)
+
+    const firstAndSecond = findFirstAndSecond(contestants, pointHeaders)
     const total = sums.reduce((prevSum, sum, i) => sums[i][Object.keys(sum)[0]] + prevSum, 0)
     return (
-      <>
-      <div>{years.map((buttonYear) => (
-        <button style={{
-          background: Number(buttonYear) === Number(year) ? "#ffd8b8" : "#f8ab67",
-          borderRadius: "3px",
-          padding: "0px 6px",
-          border: Number(buttonYear) === Number(year) ?  'none' : "1px solid #361703",
-          margin: "3px",
-          height: "32px",
-          textDecoration: "none",
-          cursor:'pointer'
-        }} onClick={
-          (e) => {
-            router.push('/'+branch+'?year=' + buttonYear, undefined, { shallow: true })
-            setYear(buttonYear)
-          }
-        }>{buttonYear}</button>
-      ))}</div>
-      <div>{branches.map((buttonBranch) => (
-        <button style={{
-          background: buttonBranch === branch ? "#ffd8b8" : "#f8ab67",
-          borderRadius: "3px",
-          padding: "0px 6px",
-          border: buttonBranch === branch ?  'none' : "1px solid #361703",
-          margin: "3px",
-          height: "32px",
-          textDecoration: "none",
-          cursor:'pointer'
-        }} onClick={
-          (e) => {
-            router.push('/'+buttonBranch+'?year=' + year, undefined, { shallow: true })
-            setYear(buttonBranch)
-          }
-        }>{buttonBranch}</button>
-      ))}</div>
-        <h1>Resultat myrstigen {year}</h1>
-        <table style={{ marginTop: "24px" }}>
-          <tr>
-            {headers.map((header, i) => {
-              const sum = sums.find((sum) => !!sum[header])
-              return (<th>{sum ? sum[header] : ''}</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Summa av poäng'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const sum = sums.find((sum) => !!sum[header])
-              return (<th>{ sum ? Math.round(Number(sum[header]) / myrstigen.length) : ''}</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Medelpoäng'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const sum = sums.find((sum) => !!sum[header])
-              return (<th>{ sum ? Math.round(Number(sum[header]) / total * 100) + '%' : ''}</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Andlar av toltal'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const FAS = firstAndSecond[header]
-              return (<th>{FAS ? Number(firstAndSecond[header].firstPoint) - Number(firstAndSecond[header].secondPoint) : ''}</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Diff. mellan no1&2'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const FAS = firstAndSecond[header]
-              const sum = sums.find((sum) => !!sum[header])
-              const diffControl = FAS ? Math.round((Number(firstAndSecond[header].firstPoint) -( Math.round(Number(sum[header]) / myrstigen.length))) / Number(sum ? sum[header] : 0) * 1000) : 0
-              return (<th style={{
-                background: FAS ?  diffControl > 50 ? '#f00' : diffControl >= 20 ? '#a74300' : diffControl > 15 ? '#f8ab67' : '#ffd8b8' : '',
-                color: diffControl < 20? '#000000' :'#ffffff' 
-             }}>{FAS ? diffControl + '‰' : '' }</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Andlar 1´an mot medel'}</th>
-          </tr>
-          <tr>
-            {headers.map((header, i) => {
-              const FAS = firstAndSecond[header]
-              const sum = sums.find((sum) => !!sum[header])
-              const diffControl = FAS ? Math.round((Number(firstAndSecond[header].firstPoint) - Number(firstAndSecond[header].secondPoint)) / Number(sum ? sum[header] : 0) * 1000) : 0
-              return (<th style={{
-                background: FAS ?  diffControl > 15 ? '#a74300' : diffControl > 10 ? '#f8ab67' : '#ffd8b8' : '',
-                color: diffControl < 15? '#000000' :'#ffffff' 
-             }}>{FAS ? diffControl + '‰' : '' }</th>)
-            })
-            }
-            <th style={{textAlign:'left'}}>{'<-Andlar diff. mellan no1&2 kontroll summa'}</th>
-          </tr>
-          <tr >
-            {headers.map((header, i) => {
-              const FAS = firstAndSecond[header]
-              const diffTotal = FAS ? Math.round((Number(firstAndSecond[header].firstPoint) - Number(firstAndSecond[header].secondPoint)) / total * 10000) :0
-              return (<th style={{
-                background: FAS ? diffTotal > 12 ? '#a74300' : diffTotal > 7 ? '#f8ab67' : '#ffd8b8' : '',
-                color: diffTotal < 12 ? '#000000' :'#ffffff' 
-             }}>{ FAS ? diffTotal + '‱':  ''}</th>)
-            })
-            }
-          <th style={{textAlign:'left'}}>{'<-Andlar diff. mellan no1&2 total'}</th>
-          </tr>
-          <tr style={{ cursor: 'pointer' }}>
-            {headers.map((header) => {
-              return (<th onClick={(e) => {
-                setMyr([...myr.sort((contestantA, contestantB) => {
-                  let sortA = !isNaN(Number(contestantA[header])) ? Number(contestantA[header]) : contestantA[header]
-                  let sortB = !isNaN(Number(contestantB[header])) ? Number(contestantB[header]) : contestantB[header]
-                  
-                  if (header === sortOn.col && sortOn.dirk === 'DESC' ||  header !== sortOn.col ){
-                    setSortOn({col:header,dirk: 'ASC' });
-                  } else {
-                    sortB = !isNaN(Number(contestantA[header])) ? Number(contestantA[header]) : contestantA[header]
-                    sortA = !isNaN(Number(contestantB[header])) ? Number(contestantB[header]) : contestantB[header]
-                    setSortOn({col:header,dirk: 'DESC' });
-                  }
-                  if (sortA >= sortB) {
-                    return -1
-                  } else if (sortA <= sortB) {
-                    return 1
-                  }
-                  else 0
-                })])
-              }} style={ pointHeaders.indexOf(header) !== -1 ? { transform: "rotate(-180deg)", writingMode: 'vertical-rl', textOrientation: 'mixed', textAlign: "start", padding: '5px 0 0 0' } : {
-                verticalAlign: 'bottom'
-              }}>{header}{header === sortOn.col ? sortOn.dirk === 'ASC' ? ' v' : ' ^' : ''}</th>)
-            })
-            }
-          </tr>
+      <div style={{padding:'12px'}}>
+        <Header {...{branches,setBranch,maxMinYears,setYear, branch,year,type,setType,info,idToName,years, router,types }} />
+        <table style={{ marginTop: "24px", marginBottom: '100vh' }}>
           {
-            myrstigen.map((contestant) => {
-              return (
-                <tr>
-                  {Object.keys(contestant).map((key, i) => {
-                    return (<td>{contestant[headers[i]]}</td>)
-                  })
-                  }
-                </tr>
-              )
-            })}
+            branch === 'myrstigen' ||
+            branch === 'alghornet' && (type === 'pat' || type === 'kalkpat') ||
+            branch === 'silv' && (type === 'pat')||
+            branch === 'bjorn'?
+              <><SumOfPoints {...{ headers, sums }} />
+                <AverageScore {...{ headers, sums, contestants }} />
+                <AverageScoreOfTotal {...{ headers, sums, total }} />
+                <DiffFirstAndSecond {...{ headers, firstAndSecond }} />
+                <AverageAgainstTheWinner {...{ headers, sums, firstAndSecond, contestants }} />
+                <DiffFirstAndSecondAgainstControl {...{ headers, sums, firstAndSecond }} />
+                <DiffFirstAndSecondAgainstTotal {...{ headers, firstAndSecond, total }} />
+              </> : <></>}
+
+          <TableHeaders {...{ setContestantsData, contestantsData, pointHeaders, headers, sortOn, setSortOn }} />
+
+          <TableBody contestants={contestants} headers={headers} />
         </table>
-      </>
+      </div>
     )
-  } return null
+  } return <Header {...{branches,setBranch,maxMinYears,setYear, branch,year,type,setType,info,idToName,years, router,types }} />
+        
 }
