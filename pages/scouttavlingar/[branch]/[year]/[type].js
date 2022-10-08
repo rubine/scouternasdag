@@ -236,8 +236,7 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
                 <DiffFirstAndSecondAgainstControl {...{ headers, sums, firstAndSecond }} />
                 <DiffFirstAndSecondAgainstTotal {...{ headers, firstAndSecond, total }} />
               </thead> : <></>}
-
-          <TableHeaders {...{ setContestantsData, contestantsData, pointHeaders, headers, sortOn, setSortOn }} />
+          <TableHeaders {...{ pointHeaders, headers, sortOn, setSortOn }} />
 
           <TableBody contestants={contestants} headers={headers} />
         </table>

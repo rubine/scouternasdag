@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/router";
+import TableHeaders from "../../../Components/TableHeaders"
 
-import corps from '../../JSONDATA/corps.js'
-import NavBar from '../../Components/NavBar'
+import corps from '../../../JSONDATA/corps'
+import NavBar from '../../../Components/NavBar'
 export default function Home() {
 
   const [contestantsData, setContestantsData] = useState([]);
   const [alghornetYears, setAlghornetYears] = useState([]);
   const [bjornYears, setBjornYears] = useState([]);
   const [myrstigenYears, setMyrstigenYears] = useState([]);
-  const [sortOn, setSort] = useState({ col: 'Scoutkår', dirk: 'DESC' });
+  const [sortOn, setSort] = useState({ col: 'Antal sakade', dirk: 'DESC' });
   const [totalFunkAndStil, setTotalFunk] = useState(0);
   const branches = [
     "myrstigen",
@@ -17,6 +18,14 @@ export default function Home() {
     "silv",
     "bjorn"
   ]
+  const headers = {
+    'Scoutkår': 'Scoutkår',
+    'antalTävlingar': 'Antal tävlande avdelningar',
+    'Funkt': 'Stil och funk poäng',
+    'maxFunk': 'Maximalt stil och funk poäng',
+    'ofMax': 'Andelar',
+    'diff': 'Antal sakade'
+  }
   const router = useRouter()
 
   const idToName = {
@@ -33,12 +42,13 @@ export default function Home() {
   useEffect(
     () => {
       if (contestantsData) {
+        const sortOnColumn = Object.keys(headers).find((col)=>(sortOn.col=== headers[col]))
         setContestantsData([...contestantsData.sort((contestantA, contestantB) => {
-          let sortA = !isNaN(Number(contestantA[sortOn.col])) ? Number(contestantA[sortOn.col]) : contestantA[sortOn.col]
-          let sortB = !isNaN(Number(contestantB[sortOn.col])) ? Number(contestantB[sortOn.col]) : contestantB[sortOn.col]
+          let sortA = !isNaN(Number(contestantA[sortOnColumn])) ? Number(contestantA[sortOnColumn]) : contestantA[sortOnColumn]
+          let sortB = !isNaN(Number(contestantB[sortOnColumn])) ? Number(contestantB[sortOnColumn]) : contestantB[sortOnColumn]
           if (sortOn.dirk === 'DESC') {
-            sortB = !isNaN(Number(contestantA[sortOn.col])) ? Number(contestantA[sortOn.col]) : contestantA[sortOn.col]
-            sortA = !isNaN(Number(contestantB[sortOn.col])) ? Number(contestantB[sortOn.col]) : contestantB[sortOn.col]
+            sortB = !isNaN(Number(contestantA[sortOnColumn])) ? Number(contestantA[sortOnColumn]) : contestantA[sortOnColumn]
+            sortA = !isNaN(Number(contestantB[sortOnColumn])) ? Number(contestantB[sortOnColumn]) : contestantB[sortOnColumn]
           }
           if (sortA >= sortB) {
             return -1
@@ -126,15 +136,10 @@ export default function Home() {
       <NavBar {...{ branches, idToName, year: 2022, type: 'avd', router, funk: true, setBranch: () => { } }} />
       <h3>Total poäng om du har en avdelning per gren på scouternasdag: {totalFunkAndStil}</h3>
       <table>
-        <thead>
-          <tr><th style={{ cursor: 'pointer', color: '#000' }} onClick={() => { sortOn.col === 'Scoutkår' && sortOn.dirk === 'DESC' ? setSort({ col: 'Scoutkår', dirk: 'ASC' }) : setSort({ col: 'Scoutkår', dirk: 'DESC' }) }}>Scoutkår</th>
-            <th style={{ cursor: 'pointer', color: '#000' }} onClick={() => { sortOn.col === 'antalTävlingar' && sortOn.dirk === 'DESC' ? setSort({ col: 'antalTävlingar', dirk: 'ASC' }) : setSort({ col: 'antalTävlingar', dirk: 'DESC' }) }}>Antal tävlande avdelningar</th>
-            <th style={{ cursor: 'pointer', color: '#000' }} onClick={() => { sortOn.col === 'Funkt' && sortOn.dirk === 'DESC' ? setSort({ col: 'Funkt', dirk: 'ASC' }) : setSort({ col: 'Funkt', dirk: 'DESC' }) }}>Stil och funk poäng</th>
-            <th style={{ cursor: 'pointer', color: '#000' }} onClick={() => { sortOn.col === 'maxFunk' && sortOn.dirk === 'DESC' ? setSort({ col: 'maxFunk', dirk: 'ASC' }) : setSort({ col: 'maxFunk', dirk: 'DESC' }) }}>Maximalt stil och funk poäng</th>
-            <th style={{ cursor: 'pointer', color: '#000' }} onClick={() => { sortOn.col === 'ofMax' && sortOn.dirk === 'DESC' ? setSort({ col: 'ofMax', dirk: 'ASC' }) : setSort({ col: 'ofMax', dirk: 'DESC' }) }}>Andelar</th>
-            <th style={{ cursor: 'pointer', color: '#000' }} onClick={() => { sortOn.col === 'diff' && sortOn.dirk === 'DESC' ? setSort({ col: 'diff', dirk: 'ASC' }) : setSort({ col: 'diff', dirk: 'DESC' }) }}>Antal sakade</th></tr>
-        </thead>
-        <tbody>{contestantsData.map((contestant, index) =>(<tr key={contestant + index}><td>{contestant.Scoutkår}</td><td>{contestant.antalTävlingar}</td><td>{Math.round(contestant.Funkt)}</td><td>{Math.round(contestant.maxFunk)}</td><td>{Math.round(contestant.ofMax * 1000) / 10}%</td><td>{Math.round(contestant.diff)}</td></tr>))}</tbody>
+
+        <TableHeaders {...{ pointHeaders: [...Object.values(headers).filter((value)=>(value !== 'Scoutkår'))], headers: [...Object.values(headers)], sortOn, setSortOn: setSort
+        }} />
+        <tbody>{contestantsData.map((contestant, index) => (<tr key={contestant + index}><td>{contestant.Scoutkår}</td><td>{contestant.antalTävlingar}</td><td>{Math.round(contestant.Funkt)}</td><td>{Math.round(contestant.maxFunk)}</td><td>{contestant.ofMax ? (Math.round(contestant.ofMax * 1000) / 10) : 0 }%</td><td>{Math.round(contestant.diff)}</td></tr>))}</tbody>
 
       </table>
     </div>
