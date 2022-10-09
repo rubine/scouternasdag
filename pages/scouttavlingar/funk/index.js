@@ -5,15 +5,16 @@ import TableHeaders from "../../../Components/TableHeaders"
 import NavBar from '../../../Components/NavBar'
 export async function getStaticProps(context) {
   const data = await fetch('http://localhost:3001/api/statistics').then(response => response.json())
+  debugger
   return {
-    props: {...data},
+    props: {contestants: data.contestantsData, totalFunk: data.totalFunk },
   }
 }
-export default function Funk({contestants}) {
+export default function Funk({contestants, totalFunk}) {
 
   const [contestantsData, setContestantsData] = useState(contestants||[]);
   const [sortOn, setSort] = useState({ col: 'Antal sakade poäng', dirk: 'DESC' });
-  const [totalFunkAndStil, setTotalFunk] = useState(0);
+  const [totalFunkAndStil, setTotalFunk] = useState(totalFunk);
   const [isFetching, setIsfetching] = useState(contestantsData.length !== 0)
   if(contestantsData.length === 0 && !isFetching){
     setIsfetching(true)
