@@ -1,0 +1,10 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /_next/
+
+# Host
+Host: https://ssd.snabbfot.org/
+
+# Sitemaps
+Sitemap: https://ssd.snabbfot.org/sitemap.xml
