@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import Head from 'next/head'
 import { useRouter } from "next/router";
 import TableHeaders from "../../../Components/TableHeaders"
-
-import corps from '../../../JSONDATA/corps'
 import NavBar from '../../../Components/NavBar'
+export async function getStaticProps(context) {
+  const data = await fetch('http://localhost:3001/api/statistics').then(response => response.json())
+  return {
+    props: {...data},
+  }
+}
+export default function Funk({contestants}) {
 
-export default function Funk() {
-
-  const [contestantsData, setContestantsData] = useState([]);
-  const [alghornetYears, setAlghornetYears] = useState([]);
-  const [bjornYears, setBjornYears] = useState([]);
-  const [myrstigenYears, setMyrstigenYears] = useState([]);
+  const [contestantsData, setContestantsData] = useState(contestants||[]);
   const [sortOn, setSort] = useState({ col: 'Antal sakade poäng', dirk: 'DESC' });
   const [totalFunkAndStil, setTotalFunk] = useState(0);
+  const [isFetching, setIsfetching] = useState(contestantsData.length !== 0)
+  if(contestantsData.length === 0 && !isFetching){
+    setIsfetching(true)
+    fetch('/api/statistics').then(response => response.json())
+        .then(data => {
+          debugger
+          setIsfetching(false)
+          setContestantsData(data.contestantsData)
+          setTotalFunk(data.totalFunk)
+        })
+  }
   const branches = [
     "myrstigen",
     "bjorn",
@@ -61,75 +73,14 @@ export default function Funk() {
       }
     }, [sortOn]
   );
-  useEffect(
-    () => {
-      fetch('/api/years?branch=alghornet&type=avd')
-        .then(response => response.json())
-        .then(data => {
-          setAlghornetYears(data.years)
-        })
-      fetch('/api/years?branch=bjorn&type=avd')
-        .then(response => response.json())
-        .then(data => {
-          setBjornYears(data.years)
-        })
-      fetch('/api/years?branch=myrstigen&type=avd')
-        .then(response => response.json())
-        .then(data => {
-          setMyrstigenYears(data.years)
-        })
-    }, []
-  );
 
-  useEffect(
-    () => {
-      if (alghornetYears.length > 0 && bjornYears.length > 0) {
-        const requests =
 
-          Promise.all([
-            ...alghornetYears.map((year) => fetch('/api/alghornet?year=' + year + '&type=avd').then(response => response.json())),
-            ...bjornYears.map((year) => fetch('/api/bjorn?year=' + year + '&type=avd').then(response => response.json())),
-            ...myrstigenYears.map((year) => fetch('/api/myrstigen?year=' + year + '&type=avd').then(response => response.json()))]
-          )
-            .then((responses) => {
-              let totalFunk = 0
-              setContestantsData(responses.reduce((allContestant, response) => {
-                let maxFunk = 0
-                const corpsList = Object.keys(corps).reduce((listOfCorps, oneCorps) => {
-                  return { ...listOfCorps, ...corps[oneCorps].names.reduce((names, name) => ({ ...names, [name]: oneCorps }), {}) }
-                }, {})
-                response.contestants.forEach((contestant) => {
-                  if (Number(contestant.Funkt ? contestant.Funkt : 0) + Number(contestant.Stil ? contestant.Stil : 0) > maxFunk) {
-                    maxFunk = Number(contestant.Funkt ? contestant.Funkt : 0) + Number(contestant.Stil ? contestant.Stil : 0)
-                  }
-                })
-                totalFunk = totalFunk + maxFunk
-                return [...allContestant, ...[...response.contestants].map((contestant) => {
-                  return {
-                    Scoutkår: corps[corpsList[contestant.Scoutkår]] ? corps[corpsList[contestant.Scoutkår]].name : '',
-                    maxFunk,
-                    Funkt: Number(contestant.Funkt ? contestant.Funkt : 0) + Number(contestant.Stil ? contestant.Stil : 0)
-                  }
-                })].reduce((allCorps, contestant) => {
-                  if (allCorps.length === 0 || !allCorps.find(({ Scoutkår }) => Scoutkår === contestant.Scoutkår)) {
-                    return [...allCorps, contestant]
-                  }
-                  return allCorps.map(({ Scoutkår, Funkt, maxFunk, antalTävlingar }) => {
-                    if (Scoutkår === contestant.Scoutkår) {
-                      return { Scoutkår, antalTävlingar: antalTävlingar && maxFunk > 0 ? antalTävlingar + 1 : 1, Funkt: Number(contestant.Funkt ? contestant.Funkt : 0) + Number(contestant.Stil ? contestant.Stil : 0) + Number(Funkt), maxFunk: Number(contestant.maxFunk ? contestant.maxFunk : 0) + Number(maxFunk ? maxFunk : 0) }
-                    } else {
-                      return { Scoutkår, Funkt, maxFunk, antalTävlingar: antalTävlingar ? antalTävlingar : 1 }
-                    }
-                  })
-                }, []).map((corp) => ({ ...corp, ofMax: Number(corp.Funkt) ? Math.round((Number(corp.Funkt) / Number(corp.maxFunk)) * 1000) / 10 : 0, diff: Number(corp.maxFunk) - Number(corp.Funkt) })).sort(function (a, b) { return (!isNaN(b.diff) ? b.diff : 0) - (!isNaN(a.diff) ? a.diff : 0) })
-              }, []))
-              setTotalFunk(totalFunk)
-            })
-      }
-    }, [alghornetYears, bjornYears, myrstigenYears]
-  );
   return (
     <div style={{ padding: '12px' }}>
+      <Head>
+    <title>Funktionärspoäng för scouternasdag</title>
+    <meta name="description" content="Funktionärspoäng för scouternasdag" />
+  </Head>
       <h1>Funktionärspoäng för scouternasdag</h1>
       <p>Här nedan så har jag räknat ut hur många stil och funktionärspoäng som scoutkårer har sakat under åren.</p>
       <p>Alla tävlingar har inte haft stil eller funk poäng där av så har vissa kårer inte sakat några poäng </p>
@@ -153,5 +104,4 @@ export default function Funk() {
       </table>
     </div>
   )
-
 }

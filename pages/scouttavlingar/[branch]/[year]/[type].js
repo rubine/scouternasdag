@@ -11,7 +11,7 @@ import DiffFirstAndSecondAgainstControl from "../../../../Components/DiffFirstAn
 import DiffFirstAndSecondAgainstTotal from "../../../../Components/DiffFirstAndSecondAgainstTotal"
 import Header from "../../../../Components/Header"
 
-import corps from '../../../../JSONDATA/corps.js'
+import corps from '../../../../JSONDATA/corps.mjs'
 import sum from "../../../../UI/sum"
 import calcAvd from "../../../../UI/calcAvd"
 import calcAvdAverage from "../../../../UI/calcAvdAverage"

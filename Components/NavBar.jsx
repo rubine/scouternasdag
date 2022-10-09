@@ -58,7 +58,7 @@ export default function NavBar({ funk, branch, branches, maxMinYears, year, year
                     <hr /></>
             }
             <div style={{ margin: '12px', display: 'flex', gap: '3px' }}>
-                <span>Detta är en sida gjord av sakparen av:</span><a href="https://www.snabbfot.org" style={{ display: 'flex', gap: '3px', color: "#a74300", textDecoration: 'underline' }}> <img src="/fot.svg" height='20px' /> snabbfot.org</a>
+                <span>Detta är en sida gjord av sakparen av:</span><a href="https://www.snabbfot.org" style={{ display: 'flex', gap: '3px', color: "#a74300", textDecoration: 'underline' }}> <img alt="Loggotyp" src="/fot.svg" height='20px' /> snabbfot.org</a>
                 <span>Om du har funderingar kring hur denna sida fungerar så ligger koden uppe på <a style={{ color: "#a74300", textDecoration: 'underline' }} href='https://github.com/rubine/scouternasdag'>GitHub</a> </span>
             </div>
             <hr />
