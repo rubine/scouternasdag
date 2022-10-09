@@ -82,7 +82,7 @@ const fetchResult = async (path, branch, type, year) => {
               }).catch((error) => {
                 console.error(error)
                 contestantsData = []
-                info = 'Jag har ingen lagt in eller hittat data än för dennna taväling detta år.'
+                info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
               })
           } else if (type === 'kalkavdcontrol') {
             await fetch('/api/' + branch + '?year=' + year + '&type=avd')
@@ -95,7 +95,7 @@ const fetchResult = async (path, branch, type, year) => {
               }).catch((error) => {
                 console.error(error)
                 contestantsData = []
-                info = 'Jag har ingen lagt in eller hittat data än för dennna taväling detta år.'
+                info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
               })
           } else if (type === 'kalkpat') {
             contestantsData = sum(calcAvdAverage(contestants, preDefinedHeaders), preDefinedHeaders)
@@ -106,12 +106,12 @@ const fetchResult = async (path, branch, type, year) => {
         info = data.infoAboutScore
       } else {
         contestantsData = []
-        info = 'Jag har ingen lagt in eller hittat data än för dennna taväling detta år.'
+        info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
       }
     }).catch((error) => {
       console.error(error)
       contestantsData = []
-      info = 'Jag har ingen lagt in eller hittat data än för dennna taväling detta år.'
+      info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
     })
   return { contestantsData, info: info ? info : '' }
 }
@@ -130,8 +130,8 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
     alghornet: 'Älghornet',
     pat: 'Patrull',
     kalkpat: 'Projicerad avd.',
-    kalkavdpat: 'Kalkulerad P. 1-3',
-    kalkavdcontrol: 'Kalkulerad Kont.',
+    kalkavdpat: 'Kalkylerad P. 1-3',
+    kalkavdcontrol: 'Kalkylerad Kont.',
     avd: 'Avdelning',
     silv: 'Silverugglan',
     bjorn: 'Björnklon'

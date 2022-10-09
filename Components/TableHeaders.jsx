@@ -16,7 +16,7 @@ export default function TableHeaders({ pointHeaders, headers, sortOn, setSortOn 
                             { verticalAlign: 'bottom' },
                         ...header === sortOn.col ? { color: '#000' } : {}
                     }
-                    }>{header === sortOn.col ? sortOn.dirk === 'ASC' ? ' ⌄' : ' ⌃' : ''}{header}</th>)
+                    } title={header}>{header === sortOn.col ? sortOn.dirk === 'ASC' ? ' ⌄' : ' ⌃' : ''}{header}</th>)
                 })
                 }
             </tr>

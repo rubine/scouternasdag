@@ -10,21 +10,21 @@ export default function Home() {
   const [alghornetYears, setAlghornetYears] = useState([]);
   const [bjornYears, setBjornYears] = useState([]);
   const [myrstigenYears, setMyrstigenYears] = useState([]);
-  const [sortOn, setSort] = useState({ col: 'Antal sakade', dirk: 'DESC' });
+  const [sortOn, setSort] = useState({ col: 'Antal sakade poäng', dirk: 'DESC' });
   const [totalFunkAndStil, setTotalFunk] = useState(0);
   const branches = [
     "myrstigen",
+    "bjorn",
     "alghornet",
-    "silv",
-    "bjorn"
+    "silv"
   ]
   const headers = {
     'Scoutkår': 'Scoutkår',
     'antalTävlingar': 'Antal tävlande avdelningar',
     'Funkt': 'Stil och funk poäng',
     'maxFunk': 'Maximalt stil och funk poäng',
-    'ofMax': 'Andelar',
-    'diff': 'Antal sakade'
+    'ofMax': 'Andelar maximalt mot intjänade poäng',
+    'diff': 'Antal sakade poäng'
   }
   const router = useRouter()
 
@@ -33,8 +33,8 @@ export default function Home() {
     alghornet: 'Älghornet',
     pat: 'Patrull',
     kalkpat: 'Projicerad avd.',
-    kalkavdpat: 'Kalkulerad P. 1-3',
-    kalkavdcontrol: 'Kalkulerad Kont.',
+    kalkavdpat: 'Kalkylerad P. 1-3',
+    kalkavdcontrol: 'Kalkylerad Kont.',
     avd: 'Avdelning',
     silv: 'Silverugglan',
     bjorn: 'Björnklon'
@@ -42,7 +42,7 @@ export default function Home() {
   useEffect(
     () => {
       if (contestantsData) {
-        const sortOnColumn = Object.keys(headers).find((col)=>(sortOn.col=== headers[col]))
+        const sortOnColumn = Object.keys(headers).find((col) => (sortOn.col === headers[col]))
         setContestantsData([...contestantsData.sort((contestantA, contestantB) => {
           let sortA = !isNaN(Number(contestantA[sortOnColumn])) ? Number(contestantA[sortOnColumn]) : contestantA[sortOnColumn]
           let sortB = !isNaN(Number(contestantB[sortOnColumn])) ? Number(contestantB[sortOnColumn]) : contestantB[sortOnColumn]
@@ -120,7 +120,7 @@ export default function Home() {
                       return { Scoutkår, Funkt, maxFunk, antalTävlingar: antalTävlingar ? antalTävlingar : 1 }
                     }
                   })
-                }, []).map((corp) => ({ ...corp, ofMax: Number(corp.Funkt) / Number(corp.maxFunk), diff: Number(corp.maxFunk) - Number(corp.Funkt) })).sort(function (a, b) { return (!isNaN(b.diff) ? b.diff : 0) - (!isNaN(a.diff) ? a.diff : 0) })
+                }, []).map((corp) => ({ ...corp, ofMax: Number(corp.Funkt) ? Math.round((Number(corp.Funkt) / Number(corp.maxFunk)) * 1000) / 10 : 0, diff: Number(corp.maxFunk) - Number(corp.Funkt) })).sort(function (a, b) { return (!isNaN(b.diff) ? b.diff : 0) - (!isNaN(a.diff) ? a.diff : 0) })
               }, []))
               setTotalFunk(totalFunk)
             })
@@ -130,16 +130,24 @@ export default function Home() {
   return (
     <div style={{ padding: '12px' }}>
       <h1>Funktionärspoäng för scouternasdag</h1>
-      <span>Här nedan så har jag räknat ut hur många stil och funktionärspoäng som scoutkårer har sakat under åren.</span>
-      <br />
-      <br />
+      <p>Här nedan så har jag räknat ut hur många stil och funktionärspoäng som scoutkårer har sakat under åren.</p>
+      <p>Alla tävlingar har inte haft stil eller funk poäng där av så har vissa kårer inte sakat några poäng </p>
       <NavBar {...{ branches, idToName, year: 2022, type: 'avd', router, funk: true, setBranch: () => { } }} />
-      <h3>Total poäng om du har en avdelning per gren på scouternasdag: {totalFunkAndStil}</h3>
+      <h3>Totalpoäng om du har en avdelning per gren på scouternas dag: {totalFunkAndStil}</h3>
       <table>
 
-        <TableHeaders {...{ pointHeaders: [...Object.values(headers).filter((value)=>(value !== 'Scoutkår'))], headers: [...Object.values(headers)], sortOn, setSortOn: setSort
+        <TableHeaders {...{
+          pointHeaders: [...Object.values(headers).filter((value) => (value !== 'Scoutkår'))], headers: [...Object.values(headers)], sortOn, setSortOn: setSort
         }} />
-        <tbody>{contestantsData.map((contestant, index) => (<tr key={contestant + index}><td>{contestant.Scoutkår}</td><td>{contestant.antalTävlingar}</td><td>{Math.round(contestant.Funkt)}</td><td>{Math.round(contestant.maxFunk)}</td><td>{contestant.ofMax ? (Math.round(contestant.ofMax * 1000) / 10) : 0 }%</td><td>{Math.round(contestant.diff)}</td></tr>))}</tbody>
+        <tbody>{contestantsData.map((contestant, index) => (
+          <tr key={contestant + index}>
+            <td>{contestant.Scoutkår}</td>
+            <td>{contestant.antalTävlingar}</td>
+            <td>{Math.round(contestant.Funkt)}</td>
+            <td>{Math.round(contestant.maxFunk)}</td>
+            <td>{contestant.ofMax}%</td>
+            <td>{Math.round(contestant.diff)}</td>
+          </tr>))}</tbody>
 
       </table>
     </div>
