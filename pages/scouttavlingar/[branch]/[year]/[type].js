@@ -25,9 +25,7 @@ const preDefinedHeaders = Object.keys({
   "Plac.": "ONLY_NAME", "Patruller": "ONLY_NAME", "Start#": "ONLY_NAME", "Distrikt": "ONLY_NAME", "Scoutkår": "ONLY_NAME", "Avdelning": "ONLY_NAME", "Lag/Patrull": "ONLY_NAME", "Patrull": "ONLY_NAME", "Resultat": "RESULT", "Summa": "RESULT"
 })
 export async function getStaticPaths() {
-  let paths = [
-
-  ];
+  let paths = [];
   Object.keys(years).forEach((branch) => {
     Object.keys(years[branch]).forEach((type) => {
       years[branch][type].forEach((year) => {
@@ -40,6 +38,15 @@ export async function getStaticPaths() {
     fallback: true,
   };
 }
+
+export async function getStaticProps(context) {
+  let { years, propMinMaxYars, propSortOn } = await fetchYears('http://localhost:3001/', context.params.branch, context.params.type)
+  let { contestantsData, info } = await fetchResult('http://localhost:3001/', context.params.branch, context.params.type, context.params.year)
+  return {
+    props: { propYears: years, propMinMaxYars, propSortOn, propContestantsData: contestantsData, infoProp: info },
+  };
+}
+
 const fetchYears = async (path, branch, type) => {
   let years = []
   let propMinMaxYars = []
@@ -114,14 +121,6 @@ const fetchResult = async (path, branch, type, year) => {
       info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
     })
   return { contestantsData, info: info ? info : '' }
-}
-export async function getStaticProps(context) {
-  let { years, propMinMaxYars, propSortOn } = await fetchYears('http://localhost:3001/', context.params.branch, context.params.type)
-  let { contestantsData, info } = await fetchResult('http://localhost:3001/', context.params.branch, context.params.type, context.params.year)
-
-  return {
-    props: { propYears: years, propMinMaxYars, propSortOn, propContestantsData: contestantsData, infoProp: info },
-  };
 }
 export default function Home({ propYears, propMinMaxYars, propContestantsData, infoProp }) {
 

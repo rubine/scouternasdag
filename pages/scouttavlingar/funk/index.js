@@ -4,7 +4,8 @@ import TableHeaders from "../../../Components/TableHeaders"
 
 import corps from '../../../JSONDATA/corps'
 import NavBar from '../../../Components/NavBar'
-export default function Home() {
+
+export default function Funk() {
 
   const [contestantsData, setContestantsData] = useState([]);
   const [alghornetYears, setAlghornetYears] = useState([]);
