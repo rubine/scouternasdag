@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from "next/router";
+import routers, { useRouter } from "next/router";
 import TableBody from "../../../../Components/TableBody"
 import TableHeaders from "../../../../Components/TableHeaders"
 import SumOfPoints from "../../../../Components/SumOfPoints"
@@ -51,6 +51,10 @@ const fetchYears = async (path, branch, type) => {
   let years = []
   let propMinMaxYars = []
   let propSortOn = {}
+
+  if ((branch === 'silv' || branch === 'hajk') && type !== 'pat') {
+    type = 'pat'
+  }
   await fetch(path + '/api/years?branch=' + branch + '&type=' + type)
     .then(response => response.json())
     .then(data => {
@@ -133,6 +137,7 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
     kalkavdcontrol: 'Kalkylerad Kont.',
     avd: 'Avdelning',
     silv: 'Silverugglan',
+    hajk: 'Hajkbenet',
     bjorn: 'Björnklon'
   }
   const [info, setInfo] = useState(infoProp)
@@ -145,12 +150,11 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
   const [year, setYear] = useState(query.year ? query.year : 2022);
   const [type, setType] = useState(query.type ? query.type : 'avd');
   const [branch, setBranch] = useState(query.branch);
-  const branches = ['myrstigen', 'bjorn', 'alghornet', 'silv']
+  const branches = ['myrstigen', 'bjorn', 'alghornet', 'silv', 'hajk']
   const types = ['avd', 'pat', 'kalkpat', 'kalkavdpat', 'kalkavdcontrol']
-
   useEffect(() => {
-      if (branch === 'silv') {
-        setType('pat')
+      if ((branch === 'silv' || branch === 'hajk') && type !== 'pat') {
+        router.push('/scouttavlingar/' + branch + '/' + year + '/pat#tavlingar', undefined, { shallow: true })                     
       }
     }, [branch]
   );
@@ -209,7 +213,7 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
       }
     }, [sortOn]
   );
-  if (contestantsData && contestantsData.length > 0) {
+  if (contestantsData && contestantsData.length > 0 ) {
     const contestants = [...contestantsData]
     const headers = findHeaders(contestants, preDefinedHeaders)
     const pointHeaders = Object.keys(contestants[0]).filter((header) => preDefinedHeaders.indexOf(header) === -1)
@@ -226,6 +230,7 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
             branch === 'myrstigen' ||
               branch === 'alghornet' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || year === '2016') ||
               branch === 'silv' && (type === 'pat') ||
+              branch === 'hajk' && (type === 'pat') ||
               branch === 'bjorn' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'avd') ?
               <thead><SumOfPoints {...{ headers, sums }} />
                 <AverageScore {...{ headers, sums, contestants }} />

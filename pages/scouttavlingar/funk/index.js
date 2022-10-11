@@ -5,7 +5,6 @@ import TableHeaders from "../../../Components/TableHeaders"
 import NavBar from '../../../Components/NavBar'
 export async function getStaticProps(context) {
   const data = await fetch('http://localhost:3001/api/statistics').then(response => response.json())
-  debugger
   return {
     props: {contestants: data.contestantsData, totalFunk: data.totalFunk },
   }
@@ -30,7 +29,8 @@ export default function Funk({contestants, totalFunk}) {
     "myrstigen",
     "bjorn",
     "alghornet",
-    "silv"
+    "silv",
+    "hajk"
   ]
   const headers = {
     'Scoutkår': 'Scoutkår',
@@ -51,7 +51,8 @@ export default function Funk({contestants, totalFunk}) {
     kalkavdcontrol: 'Kalkylerad Kont.',
     avd: 'Avdelning',
     silv: 'Silverugglan',
-    bjorn: 'Björnklon'
+    bjorn: 'Björnklon',
+    hajk: 'Hajkbenet'
   }
   useEffect(
     () => {
@@ -60,7 +61,7 @@ export default function Funk({contestants, totalFunk}) {
         setContestantsData([...contestantsData.sort((contestantA, contestantB) => {
           let sortA = !isNaN(Number(contestantA[sortOnColumn])) ? Number(contestantA[sortOnColumn]) : contestantA[sortOnColumn]
           let sortB = !isNaN(Number(contestantB[sortOnColumn])) ? Number(contestantB[sortOnColumn]) : contestantB[sortOnColumn]
-          if (sortOn.dirk === 'DESC') {
+          if (sortOn.dirk === 'ASC') {
             sortB = !isNaN(Number(contestantA[sortOnColumn])) ? Number(contestantA[sortOnColumn]) : contestantA[sortOnColumn]
             sortA = !isNaN(Number(contestantB[sortOnColumn])) ? Number(contestantB[sortOnColumn]) : contestantB[sortOnColumn]
           }

@@ -3,7 +3,7 @@ import yearsData from '../../JSONDATA/year.json'
 export default (request, response) => {
   const types = ['avd', 'pat', 'kalkpat', 'kalkavdpat', 'kalkavdcontrol']
   let type = types.find((type)=> type === request.query.type)
-  const branchs = ['myrstigen', 'alghornet', 'silv', 'bjorn']
+  const branchs = ['myrstigen', 'alghornet', 'silv', 'bjorn', 'hajk']
   const branch = branchs.find((branch)=> branch === request.query.branch)
   let max = false
   let min = false
