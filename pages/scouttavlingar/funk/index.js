@@ -49,6 +49,7 @@ export default function Funk({contestants, totalFunk}) {
     kalkpat: 'Projicerad avd.',
     kalkavdpat: 'Kalkylerad P. 1-3',
     kalkavdcontrol: 'Kalkylerad Kont.',
+    kalkavdcontrolmyr: 'Kalkylerad Kont.max',
     avd: 'Avdelning',
     silv: 'Silverugglan',
     bjorn: 'Björnklon',

@@ -16,6 +16,7 @@ import sum from "../../../../UI/sum"
 import calcAvd from "../../../../UI/calcAvd"
 import calcAvdAverage from "../../../../UI/calcAvdAverage"
 import calcAvdControll from "../../../../UI/calcAvdControll"
+import calcAvdControllMyr from "../../../../UI/calcAvdControllMyr"
 import calcAvdTop from "../../../../UI/calcAvdTop"
 import findFirstAndSecond from "../../../../UI/firstAndSecond"
 import addSums from '../../../../UI/addSums';
@@ -95,14 +96,18 @@ const fetchResult = async (path, branch, type, year) => {
                 contestantsData = []
                 info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
               })
-          } else if (type === 'kalkavdcontrol') {
+          } else if (type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr') {
             await fetch('/api/' + branch + '?year=' + year + '&type=avd')
               .then(response => response.json())
               .then(avdData => {
                 const avdContestants = avdData.contestants.map((contestant) => {
                   return { ...contestant, Scoutkår: corps[corpsList[contestant.Scoutkår]] ? corps[corpsList[contestant.Scoutkår]].name : '' }
                 })
-                contestantsData = sum(calcAvdControll(contestants, preDefinedHeaders, avdContestants), preDefinedHeaders)
+                if (type === 'kalkavdcontrolmyr') {
+                  contestantsData = sum(calcAvdControllMyr(contestants, preDefinedHeaders, avdContestants), preDefinedHeaders)
+                } else {
+                  contestantsData = sum(calcAvdControll(contestants, preDefinedHeaders, avdContestants), preDefinedHeaders)
+                }
               }).catch((error) => {
                 console.error(error)
                 contestantsData = []
@@ -135,6 +140,7 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
     kalkpat: 'Projicerad avd.',
     kalkavdpat: 'Kalkylerad P. 1-3',
     kalkavdcontrol: 'Kalkylerad Kont.',
+    kalkavdcontrolmyr: 'Kalkylerad Kont.max',
     avd: 'Avdelning',
     silv: 'Silverugglan',
     hajk: 'Hajkbenet',
@@ -151,22 +157,22 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
   const [type, setType] = useState(query.type ? query.type : 'avd');
   const [branch, setBranch] = useState(query.branch);
   const branches = ['myrstigen', 'bjorn', 'alghornet', 'silv', 'hajk']
-  const types = ['avd', 'pat', 'kalkpat', 'kalkavdpat', 'kalkavdcontrol']
+  const types = ['avd', 'pat', 'kalkpat', 'kalkavdpat', 'kalkavdcontrol', 'kalkavdcontrolmyr']
   useEffect(() => {
-      if ((branch === 'silv' || branch === 'hajk') && type !== 'pat') {
-        router.push('/scouttavlingar/' + branch + '/' + year + '/pat#tavlingar', undefined, { shallow: true })                     
-      }
-    }, [branch]
+    if ((branch === 'silv' || branch === 'hajk') && type !== 'pat') {
+      router.push('/scouttavlingar/' + branch + '/' + year + '/pat#tavlingar', undefined, { shallow: true })
+    }
+  }, [branch]
   );
   useEffect(() => {
-      if (branch && type) {
-        fetchYears('', branch, type).then(({ years, propMinMaxYars }) => {
-          setYears(years)
-          setMaxMinYears(propMinMaxYars)
-          setSortOn({ col: 'Plac.', dirk: 'DESC' })
-        })
-      }
-    }, [branch, type]
+    if (branch && type) {
+      fetchYears('', branch, type).then(({ years, propMinMaxYars }) => {
+        setYears(years)
+        setMaxMinYears(propMinMaxYars)
+        setSortOn({ col: 'Plac.', dirk: 'DESC' })
+      })
+    }
+  }, [branch, type]
   );
   useEffect(() => {
     if (branch && type) {
@@ -178,7 +184,7 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
     }
   }, [branch, year, type]
   );
-  
+
   useEffect(
     () => {
       if (query.year) {
@@ -213,7 +219,7 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
       }
     }, [sortOn]
   );
-  if (contestantsData && contestantsData.length > 0 ) {
+  if (contestantsData && contestantsData.length > 0) {
     const contestants = [...contestantsData]
     const headers = findHeaders(contestants, preDefinedHeaders)
     const pointHeaders = Object.keys(contestants[0]).filter((header) => preDefinedHeaders.indexOf(header) === -1)
@@ -224,14 +230,32 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
 
     return (
       <div style={{ padding: '12px' }}>
+        <h2 style={{ maxWidth: '600px', margin: '12px' }}>Tävlingar i Stockholm Scoutdistrikt</h2>
+        <div style={{ maxWidth: '600px', margin: '18px' }}>
+          <p>
+            Under våren 2022 så höll Stockholm Scoutdistrikt i tävlingen scouternas dag.
+            Jag va tveksam till en kontroll som min dåvarande kår höll i.
+            När avdelningen som en av baskontrollanterna även är avdelningsledare för fick över 50 poäng mer än tvåan, så fick jag idén till att skapa denna sida. Sidan visar att detta är högst ovanligt med så stora poäng skillnader.
+            Jag har givetvis meddelat mina misstankar om fusk till distriktsstyrelsen, det är dom som kan göra något åt fusk.
+            De va inte det minsta intresserade utom lämnade över allt till TOIS som svarade att de inte kunde göra något i efterhand.
+            Det va därför jag hade tagit kontakt med styrelsen i första hand det är bara dom som kan utesluta folk/kårer som fuskar från tävlingar enligt regelverket.
+          </p>
+          <p>
+            Nu har jag vidareutvecklat så att man enkelt kan sortera på olika kontroller och jämföra poäng och även få uträkningar för avdelningar på alla nivåer av tävlingar på scouternas dag.
+            Jag har även lagt in all data jag kan hitta/orkar för de olika tävlingarna TOIS arrangerar.
+            Dock så tycker jag att det är viktigt att persondata inte sprids på nätet så jag har inte lagt upp tävlingar där deltagarna står med deras namn.
+          </p>
+        </div>
+        <div style={{minHeight:'100vh'}}>
+          
         <Header {...{ branches, setBranch, maxMinYears, setYear, branch, year, type, setType, info, idToName, years, router, types }} />
-        <table style={{ marginTop: "24px", marginBottom: '100vh' }}>
+        <table style={{ marginTop: "24px" }}>
           {
-            branch === 'myrstigen' ||
-              branch === 'alghornet' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || year === '2016') ||
+            branch === 'myrstigen' && (type === 'pat' || type === 'avd'|| type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr') ||
+              branch === 'alghornet' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || year === '2016') ||
               branch === 'silv' && (type === 'pat') ||
               branch === 'hajk' && (type === 'pat') ||
-              branch === 'bjorn' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'avd') ?
+              branch === 'bjorn' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || type === 'avd') ?
               <thead><SumOfPoints {...{ headers, sums }} />
                 <AverageScore {...{ headers, sums, contestants }} />
                 <AverageScoreOfTotal {...{ headers, sums, total }} />
@@ -244,8 +268,9 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
 
           <TableBody contestants={contestants} headers={headers} />
         </table>
+        </div>
       </div>
     )
-  } return <div style={{ marginTop: "24px", marginBottom: '100vh' }}> <Header {...{ branches, setBranch, maxMinYears, setYear, branch, year, type, setType, info, idToName, years, router, types }} /> </div>
+  } return <div style={{ marginTop: "24px" }}> <Header {...{ branches, setBranch, maxMinYears, setYear, branch, year, type, setType, info, idToName, years, router, types }} /> </div>
 
 }
