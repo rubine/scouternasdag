@@ -4,26 +4,30 @@ import { useRouter } from "next/router";
 import TableHeaders from "../../../Components/TableHeaders"
 import NavBar from '../../../Components/NavBar'
 export async function getStaticProps(context) {
-  const data = await fetch('http://localhost:3001/api/statistics').then(response => response.json())
-  return {
-    props: {contestants: data.contestantsData, totalFunk: data.totalFunk },
+
+  try {
+    const data = await fetch('http://localhost:3001/api/statistics').then(response => response.json())
+    return {
+      props: { contestants: data.contestantsData, totalFunk: data.totalFunk },
+    }
+  } catch (error) {
+    return {}
   }
 }
-export default function Funk({contestants, totalFunk}) {
+export default function Funk({ contestants, totalFunk }) {
 
-  const [contestantsData, setContestantsData] = useState(contestants||[]);
+  const [contestantsData, setContestantsData] = useState(contestants || []);
   const [sortOn, setSort] = useState({ col: 'Antal sakade poäng', dirk: 'DESC' });
   const [totalFunkAndStil, setTotalFunk] = useState(totalFunk);
   const [isFetching, setIsfetching] = useState(contestantsData.length !== 0)
-  if(contestantsData.length === 0 && !isFetching){
+  if (contestantsData.length === 0 && !isFetching) {
     setIsfetching(true)
     fetch('/api/statistics').then(response => response.json())
-        .then(data => {
-          debugger
-          setIsfetching(false)
-          setContestantsData(data.contestantsData)
-          setTotalFunk(data.totalFunk)
-        })
+      .then(data => {
+        setIsfetching(false)
+        setContestantsData(data.contestantsData)
+        setTotalFunk(data.totalFunk)
+      })
   }
   const branches = [
     "myrstigen",
@@ -81,9 +85,9 @@ export default function Funk({contestants, totalFunk}) {
   return (
     <div style={{ padding: '12px' }}>
       <Head>
-    <title>Funktionärspoäng för scouternasdag</title>
-    <meta name="description" content="Funktionärspoäng för scouternasdag" />
-  </Head>
+        <title>Funktionärspoäng för scouternasdag</title>
+        <meta name="description" content="Funktionärspoäng för scouternasdag" />
+      </Head>
       <h1>Funktionärspoäng för scouternasdag</h1>
       <p>Här nedan så har jag räknat ut hur många stil och funktionärspoäng som scoutkårer har sakat under åren.</p>
       <p>Alla tävlingar har inte haft stil eller funk poäng där av så har vissa kårer inte sakat några poäng </p>

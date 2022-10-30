@@ -41,11 +41,15 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps(context) {
-  let { years, propMinMaxYars, propSortOn } = await fetchYears('http://localhost:3001/', context.params.branch, context.params.type)
-  let { contestantsData, info } = await fetchResult('http://localhost:3001/', context.params.branch, context.params.type, context.params.year)
-  return {
-    props: { propYears: years, propMinMaxYars, propSortOn, propContestantsData: contestantsData, infoProp: info },
-  };
+  try {
+    let { years, propMinMaxYars, propSortOn } = await fetchYears('http://localhost:3001/', context.params.branch, context.params.type)
+    let { contestantsData, info } = await fetchResult('http://localhost:3001/', context.params.branch, context.params.type, context.params.year)
+    return {
+      props: { propYears: years, propMinMaxYars, propSortOn, propContestantsData: contestantsData, infoProp: info },
+    };
+  } catch (error) {
+    return {}
+  }
 }
 
 const fetchYears = async (path, branch, type) => {
@@ -94,7 +98,7 @@ const fetchResult = async (path, branch, type, year) => {
               }).catch((error) => {
                 console.error(error)
                 contestantsData = []
-                info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
+                info = (<div style={{marginTop: '12px', background:'#f00', color:'#fff', padding:'6px'}}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
               })
           } else if (type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr') {
             await fetch('/api/' + branch + '?year=' + year + '&type=avd')
@@ -111,7 +115,7 @@ const fetchResult = async (path, branch, type, year) => {
               }).catch((error) => {
                 console.error(error)
                 contestantsData = []
-                info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
+                info = (<div style={{marginTop: '12px', background:'#f00', color:'#fff', padding:'6px'}}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
               })
           } else if (type === 'kalkpat') {
             contestantsData = sum(calcAvdAverage(contestants, preDefinedHeaders), preDefinedHeaders)
@@ -122,12 +126,12 @@ const fetchResult = async (path, branch, type, year) => {
         info = data.infoAboutScore
       } else {
         contestantsData = []
-        info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
+        info = (<div style={{marginTop: '12px', background:'#f00', color:'#fff', padding:'6px'}}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
       }
     }).catch((error) => {
       console.error(error)
       contestantsData = []
-      info = 'Jag har ingen lagt in eller hittat data än för denna tävling detta år.'
+      info = (<div style={{marginTop: '12px', background:'#f00', color:'#fff', padding:'6px'}}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
     })
   return { contestantsData, info: info ? info : '' }
 }
@@ -187,13 +191,13 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
 
   useEffect(
     () => {
-      if (query.year) {
+      if (query.year && year !== query.year) {
         setYear(query.year)
       }
-      if (query.branch) {
+      if (query.branch && branch !== query.branch) {
         setBranch(query.branch)
       }
-      if (query.type) {
+      if (query.type && type !== query.type) {
         setType(query.type)
       }
     }, [query]
@@ -246,28 +250,28 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
             Dock så tycker jag att det är viktigt att persondata inte sprids på nätet så jag har inte lagt upp tävlingar där deltagarna står med deras namn.
           </p>
         </div>
-        <div style={{minHeight:'100vh'}}>
-          
-        <Header {...{ branches, setBranch, maxMinYears, setYear, branch, year, type, setType, info, idToName, years, router, types }} />
-        <table style={{ marginTop: "24px" }}>
-          {
-            branch === 'myrstigen' && (type === 'pat' || type === 'avd'|| type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr') ||
-              branch === 'alghornet' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || year === '2016') ||
-              branch === 'silv' && (type === 'pat') ||
-              branch === 'hajk' && (type === 'pat') ||
-              branch === 'bjorn' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || type === 'avd') ?
-              <thead><SumOfPoints {...{ headers, sums }} />
-                <AverageScore {...{ headers, sums, contestants }} />
-                <AverageScoreOfTotal {...{ headers, sums, total }} />
-                <DiffFirstAndSecond {...{ headers, firstAndSecond }} />
-                <AverageAgainstTheWinner {...{ headers, sums, firstAndSecond, contestants }} />
-                <DiffFirstAndSecondAgainstControl {...{ headers, sums, firstAndSecond }} />
-                <DiffFirstAndSecondAgainstTotal {...{ headers, firstAndSecond, total }} />
-              </thead> : <></>}
-          <TableHeaders {...{ pointHeaders, headers, sortOn, setSortOn }} />
+        <div style={{ minHeight: '100vh' }}>
 
-          <TableBody contestants={contestants} headers={headers} />
-        </table>
+          <Header {...{ branches, setBranch, maxMinYears, setYear, branch, year, type, setType, info, idToName, years, router, types }} />
+          <table style={{ marginTop: "24px" }}>
+            {
+              branch === 'myrstigen' && (type === 'pat' || type === 'avd' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr') ||
+                branch === 'alghornet' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || year === '2016') ||
+                branch === 'silv' && (type === 'pat') ||
+                branch === 'hajk' && (type === 'pat') ||
+                branch === 'bjorn' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || type === 'avd') ?
+                <thead><SumOfPoints {...{ headers, sums }} />
+                  <AverageScore {...{ headers, sums, contestants }} />
+                  <AverageScoreOfTotal {...{ headers, sums, total }} />
+                  <DiffFirstAndSecond {...{ headers, firstAndSecond }} />
+                  <AverageAgainstTheWinner {...{ headers, sums, firstAndSecond, contestants }} />
+                  <DiffFirstAndSecondAgainstControl {...{ headers, sums, firstAndSecond }} />
+                  <DiffFirstAndSecondAgainstTotal {...{ headers, firstAndSecond, total }} />
+                </thead> : <></>}
+            <TableHeaders {...{ pointHeaders, headers, sortOn, setSortOn }} />
+
+            <TableBody contestants={contestants} headers={headers} />
+          </table>
         </div>
       </div>
     )
