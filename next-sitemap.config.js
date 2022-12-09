@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: 'http://ssd.snabbfot.org/',
+  siteUrl: 'https://ssd.snabbfot.org/',
   generateRobotsTxt: true,
   generateIndexSitemap: false,
   changefreq: false,
