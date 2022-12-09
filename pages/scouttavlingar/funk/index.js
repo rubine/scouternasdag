@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import TableHeaders from "../../../Components/TableHeaders"
 import NavBar from '../../../Components/NavBar'
 export async function getStaticProps(context) {
-
   try {
     const data = await fetch('http://localhost:3001/api/statistics').then(response => response.json())
     return {

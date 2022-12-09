@@ -21,7 +21,6 @@ useEffect(() => {
         })
     }
 }, [])
-  console.log(dimensions)
   return (
     <>
       <NavBar {...{ branch, branches, maxMinYears, year, years, idToName, setType, setYear, setBranch, router, types, type }} />

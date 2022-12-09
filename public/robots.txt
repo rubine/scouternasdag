@@ -4,7 +4,7 @@ Allow: /
 Disallow: /_next/
 
 # Host
-Host: http://ssd.snabbfot.org/
+Host: https://ssd.snabbfot.org/
 
 # Sitemaps
-Sitemap: http://ssd.snabbfot.org/sitemap.xml
+Sitemap: https://ssd.snabbfot.org/sitemap.xml
