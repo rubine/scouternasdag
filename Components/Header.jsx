@@ -1,6 +1,27 @@
 import Head from 'next/head'
 import NavBar from './NavBar'
+import { useEffect, useState } from "react";
 export default function Header({ branches, maxMinYears, branch, year, type, info, idToName, years, setType, setYear, setBranch, router, types }) {
+  
+  const [dimensions, setDimensions] = useState({
+    height: 0,
+    width: 0
+})
+useEffect(() => {
+    if (window) {
+        window.addEventListener('resize', () => {
+            setDimensions({
+                height: window.screen.availHeight,
+                width: window.screen.availWidth
+            })
+        })
+        setDimensions({
+            height: window.screen.availHeight,
+            width: window.screen.availWidth
+        })
+    }
+}, [])
+  console.log(dimensions)
   return (
     <>
       <NavBar {...{ branch, branches, maxMinYears, year, years, idToName, setType, setYear, setBranch, router, types, type }} />
@@ -9,7 +30,9 @@ export default function Header({ branches, maxMinYears, branch, year, type, info
         <meta name="description" content="En tävling annornad av Stockholm Scoutdistrikt" />
       </Head>
       <h1 style={{ margin: '12px' }}>Resultat {idToName[branch]?.toLowerCase()} {year} för {idToName[type]?.toLowerCase()}</h1>
-      <div style={{ maxWidth: "480px", display: "block", position: type === 'kalkavdpat' || (branch === 'alghornet' && type === 'avd') ?  "inherit": "absolute" , paddingLeft: "18px" }}>
+      <div style={{ maxWidth: "480px", display: "block", 
+      position: dimensions.width > 1000 ? type === 'kalkavdpat' || (branch === 'alghornet' && type === 'avd') ?  "inherit": "absolute": '' , 
+      paddingLeft: "18px" }}>
         {type === 'kalkavdpat' && <span><b>Kalkylerad patrull: </b>
           Detta är en kontrollräkning av resultatet för avdelning om "Summan" är fetstilade så tyder det på att jag och tävlingsledningen har räknat olika.
         </span>}

@@ -98,7 +98,7 @@ const fetchResult = async (path, branch, type, year) => {
               }).catch((error) => {
                 console.error(error)
                 contestantsData = []
-                info = (<div style={{marginTop: '12px', background:'#f00', color:'#fff', padding:'6px'}}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
+                info = (<div style={{ marginTop: '12px', background: '#f00', color: '#fff', padding: '6px' }}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
               })
           } else if (type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr') {
             await fetch('/api/' + branch + '?year=' + year + '&type=avd')
@@ -115,7 +115,7 @@ const fetchResult = async (path, branch, type, year) => {
               }).catch((error) => {
                 console.error(error)
                 contestantsData = []
-                info = (<div style={{marginTop: '12px', background:'#f00', color:'#fff', padding:'6px'}}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
+                info = (<div style={{ marginTop: '12px', background: '#f00', color: '#fff', padding: '6px' }}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
               })
           } else if (type === 'kalkpat') {
             contestantsData = sum(calcAvdAverage(contestants, preDefinedHeaders), preDefinedHeaders)
@@ -126,12 +126,12 @@ const fetchResult = async (path, branch, type, year) => {
         info = data.infoAboutScore
       } else {
         contestantsData = []
-        info = (<div style={{marginTop: '12px', background:'#f00', color:'#fff', padding:'6px'}}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
+        info = (<div style={{ marginTop: '12px', background: '#f00', color: '#fff', padding: '6px' }}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
       }
     }).catch((error) => {
       console.error(error)
       contestantsData = []
-      info = (<div style={{marginTop: '12px', background:'#f00', color:'#fff', padding:'6px'}}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
+      info = (<div style={{ marginTop: '12px', background: '#f00', color: '#fff', padding: '6px' }}>Jag har ingen lagt in eller hittat data än för denna tävling detta år.</div>)
     })
   return { contestantsData, info: info ? info : '' }
 }
@@ -253,25 +253,34 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
         <div style={{ minHeight: '100vh' }}>
 
           <Header {...{ branches, setBranch, maxMinYears, setYear, branch, year, type, setType, info, idToName, years, router, types }} />
-          <table style={{ marginTop: "24px" }}>
-            {
-              branch === 'myrstigen' && (type === 'pat' || type === 'avd' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr') ||
-                branch === 'alghornet' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || year === '2016') ||
-                branch === 'silv' && (type === 'pat') ||
-                branch === 'hajk' && (type === 'pat') ||
-                branch === 'bjorn' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || type === 'avd') ?
-                <thead><SumOfPoints {...{ headers, sums }} />
-                  <AverageScore {...{ headers, sums, contestants }} />
-                  <AverageScoreOfTotal {...{ headers, sums, total }} />
-                  <DiffFirstAndSecond {...{ headers, firstAndSecond }} />
-                  <AverageAgainstTheWinner {...{ headers, sums, firstAndSecond, contestants }} />
-                  <DiffFirstAndSecondAgainstControl {...{ headers, sums, firstAndSecond }} />
-                  <DiffFirstAndSecondAgainstTotal {...{ headers, firstAndSecond, total }} />
-                </thead> : <></>}
-            <TableHeaders {...{ pointHeaders, headers, sortOn, setSortOn }} />
+          <div style={{
+            overflowX: 'auto',
+            width: '100%',
+            transform: 'rotate(180deg)'
+          }}>
+            <table style={{
+              marginTop: "24px",
+              transform: 'rotate(180deg)'
+            }}>
+              {
+                branch === 'myrstigen' && (type === 'pat' || type === 'avd' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr') ||
+                  branch === 'alghornet' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || year === '2016') ||
+                  branch === 'silv' && (type === 'pat') ||
+                  branch === 'hajk' && (type === 'pat') ||
+                  branch === 'bjorn' && (type === 'pat' || type === 'kalkpat' || type === 'kalkavdcontrol' || type === 'kalkavdcontrolmyr' || type === 'avd') ?
+                  <thead><SumOfPoints {...{ headers, sums }} />
+                    <AverageScore {...{ headers, sums, contestants }} />
+                    <AverageScoreOfTotal {...{ headers, sums, total }} />
+                    <DiffFirstAndSecond {...{ headers, firstAndSecond }} />
+                    <AverageAgainstTheWinner {...{ headers, sums, firstAndSecond, contestants }} />
+                    <DiffFirstAndSecondAgainstControl {...{ headers, sums, firstAndSecond }} />
+                    <DiffFirstAndSecondAgainstTotal {...{ headers, firstAndSecond, total }} />
+                  </thead> : <></>}
+              <TableHeaders {...{ pointHeaders, headers, sortOn, setSortOn }} />
 
-            <TableBody contestants={contestants} headers={headers} />
-          </table>
+              <TableBody contestants={contestants} headers={headers} />
+            </table>
+          </div>
         </div>
       </div>
     )
