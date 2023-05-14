@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function TableBody({ contestants, headers }) {
+export default function TableBody({ contestants, headers, compact }) {
     const [isHover, setIsHover] = useState(false);
 
     const handleMouseEnter = (i) => {
@@ -15,8 +15,10 @@ export default function TableBody({ contestants, headers }) {
         cursor: 'default'
     };
 
+
     return (<tbody>{contestants.map((contestant, index) => {
         const hoverStyle = isHover === index ? boxStyle : {}
+
         return (
             <tr
                 key={contestant + index}
@@ -24,11 +26,12 @@ export default function TableBody({ contestants, headers }) {
                 onMouseEnter={() => { handleMouseEnter(index) }}
                 onMouseLeave={handleMouseLeave}>
                 {Object.keys(contestant).map((_, i) => {
-                    if (headers[i] !== 'Summa') {
+                    if (headers[i] !== 'Summa' && contestant[headers[i]]) {
                         return (<td key={headers[i]}>{contestant[headers[i]]}</td>)
-                    } else {
+                    } else if (contestant[headers[i]]) {
                         return (<td key={headers[i]} style={Number(contestant[headers[i]]) !== Number(contestant['Resultat']) ? { "fontWeight": '800' } : {}}>{contestant[headers[i]]}</td>)
                     }
+                    return <></>
                 })
                 }
             </tr>

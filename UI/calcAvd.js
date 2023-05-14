@@ -21,7 +21,7 @@ export default function calcAvd(contestantsData, preDefinedHeaders) {
           patrullPoints= Number(patrullPoints) + Number(contestant[key])
         }
       })
-      newData[uid] = [...newData[uid], patrullPoints].sort((a, b)=>(b-a)).slice(0,3)
+      newData[uid] = [...newData[uid], patrullPoints].sort((a, b)=>(b-a))
       
 
       if (bigestAvd < newData[uid].length) {

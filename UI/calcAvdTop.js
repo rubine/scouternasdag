@@ -1,7 +1,6 @@
 export default function calcAvd(avdContestants, preDefinedHeaders, patrulScores) {
 
   return avdContestants.map((avd) => {
-
     let cleanAvd = Object.keys(avd)
       .filter((key) => (preDefinedHeaders.find((keaderKey) => (key === keaderKey || key === 'Organisation' || key === 'AL' || key === 'Stil' || key === 'Funkt'))))
       .reduce((avds, item) => ({ ...avds, [item]: avd[item] }), {})

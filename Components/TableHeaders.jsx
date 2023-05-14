@@ -1,4 +1,4 @@
-export default function TableHeaders({ pointHeaders, headers, sortOn, setSortOn }) {
+export default function TableHeaders({ pointHeaders, headers, sortOn, setSortOn, compact }) {
     return (
         <thead>
             <tr><th> </th></tr>
@@ -11,12 +11,14 @@ export default function TableHeaders({ pointHeaders, headers, sortOn, setSortOn 
                             setSortOn({ col: header, dirk: 'DESC' });
                         }
                     }} style={{
-                        ...pointHeaders.indexOf(header) !== -1 ?
+                        ...pointHeaders.indexOf(header) !== -1 || header === 'Summa' ?
                             { transform: "rotate(-180deg)", writingMode: 'vertical-rl', textOrientation: 'mixed', textAlign: "start", padding: '5px 0 0 0' } :
                             { verticalAlign: 'bottom' },
                         ...header === sortOn.col ? { color: '#000' } : {}
                     }
-                    } title={header}>{header === sortOn.col ? sortOn.dirk === 'ASC' ? ' ⌄' : ' ⌃' : ''}{header}</th>)
+                    } title={header}>
+                        <span style={{ ...pointHeaders.indexOf(header) !== -1 || header === 'Summa' ? { display: "inline-block", transform: "rotate(-180deg)" } : {} }}>{header === sortOn.col ? sortOn.dirk === 'ASC' ? ' ⌄' : ' ⌃' : ''}</span>
+                        {header === 'Scoutkår' ? 'Kår' : header}</th>)
                 })
                 }
             </tr>

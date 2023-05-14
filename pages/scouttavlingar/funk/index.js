@@ -7,7 +7,7 @@ export async function getStaticProps(context) {
   try {
     const data = await fetch('http://localhost:3001/api/statistics').then(response => response.json())
     return {
-      props: { contestants: data.contestantsData, totalFunk: data.totalFunk },
+      props: { contestants: data.contestantsData, totalFunk: data.totalFunk, fallback: true },
     }
   } catch (error) {
     return {}
