@@ -43,15 +43,12 @@ export default function Home({ propYears, propMinMaxYars, propContestantsData, i
   const [info, setInfo] = useState(infoProp)
   const [years, setYears] = useState(propYears);
   const [maxMinYears, setMaxMinYears] = useState(propMinMaxYars);
-  const [contestantsData, setContestantsData] = useState(propContestantsData);
-  const [sortOn, setSortOn] = useState({ col: 'Plac.', dirk: 'DESC' });
   const { query } = useRouter();
   const router = useRouter()
   const [compact, setCompact] = useState(dimensions.width < 1000);
   const [year, setYear] = useState(query.year ? query.year : 2022);
   const [type, setType] = useState(query.type ? query.type : 'avd');
   const [branch, setBranch] = useState(query.branch);
-  const [showNav, setShowNav] = useState(true)
   const branches = ['myrstigen', 'bjorn', 'alghornet', 'silv', 'hajk']
   const types = ['avd', 'pat', 'kalkpat', 'kalkavdpat', 'kalkavdcontrol', 'kalkavdcontrolmyr']
   useEffect(() => {
